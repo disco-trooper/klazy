@@ -1,7 +1,7 @@
 {
   "name": "laku",
   "version": "1.0.0",
-  "main": "lin/index.js",
+  "main": "lib/index.js",
   "license": "MIT",
   "homepage": "https://github.com/prunevac/laku",
   "bin": {
