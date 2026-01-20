@@ -12,32 +12,32 @@ npm install -g klazy
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `klazy c` | Select context |
-| `klazy c -` | Previous context |
-| `klazy cs` | Current context |
-| `klazy ns` | Select namespace |
-| `klazy ns <name>` | Switch namespace |
-| `klazy ns -` | Previous namespace |
-| `klazy get` | List resources |
-| `klazy get deploy` | List deployments |
-| `klazy get svc -a` | Services, all namespaces |
-| `klazy exec` | Exec into pod |
-| `klazy exec <name>` | Exec (fuzzy match) |
-| `klazy desc` | Describe pod |
-| `klazy logs` | Stream logs |
-| `klazy logss` | Stream service logs |
-| `klazy env` | Pod environment |
-| `klazy events` | Recent events |
-| `klazy restart` | Restart pod |
-| `klazy copy` | Copy files |
-| `klazy del` | Delete pod |
-| `klazy top` | Metrics |
-| `klazy pf` | Port forward (pod) |
-| `klazy pfs` | Port forward (service) |
-| `klazy r` | Repeat last |
-| `klazy h` | Help |
+| Command             | Description              |
+| ------------------- | ------------------------ |
+| `klazy c`           | Select context           |
+| `klazy c -`         | Previous context         |
+| `klazy cs`          | Current context          |
+| `klazy ns`          | Select namespace         |
+| `klazy ns <name>`   | Switch namespace         |
+| `klazy ns -`        | Previous namespace       |
+| `klazy get`         | List resources           |
+| `klazy get deploy`  | List deployments         |
+| `klazy get svc -a`  | Services, all namespaces |
+| `klazy exec`        | Exec into pod            |
+| `klazy exec <name>` | Exec (fuzzy match)       |
+| `klazy desc`        | Describe pod             |
+| `klazy logs`        | Stream logs              |
+| `klazy logss`       | Stream service logs      |
+| `klazy env`         | Pod environment          |
+| `klazy events`      | Recent events            |
+| `klazy restart`     | Restart pod              |
+| `klazy copy`        | Copy files               |
+| `klazy del`         | Delete pod               |
+| `klazy top`         | Metrics                  |
+| `klazy pf`          | Port forward (pod)       |
+| `klazy pfs`         | Port forward (service)   |
+| `klazy r`           | Repeat last              |
+| `klazy h`           | Help                     |
 
 ## Features
 

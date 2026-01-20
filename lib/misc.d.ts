@@ -1,4 +1,4 @@
-import type { Context, Pod } from './types';
+import type { Context, Pod, Service } from './types';
 /**
  * Get all kubectl contexts
  */
@@ -27,3 +27,7 @@ export declare function selectPort(question: string): Promise<string>;
  * Interactive pod selection with optional fuzzy search
  */
 export declare function selectPod(pods: Pod[], searchTerm: string | undefined, allNamespaces: boolean, question?: string): Promise<Pod | undefined>;
+/**
+ * Interactive service selection with optional fuzzy search
+ */
+export declare function selectService(services: Service[], searchTerm: string | undefined, allNamespaces: boolean, question?: string): Promise<Service | undefined>;
