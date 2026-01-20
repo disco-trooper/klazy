@@ -1,5 +1,9 @@
 # klazy
 
+[![npm version](https://img.shields.io/npm/v/klazy)](https://www.npmjs.com/package/klazy)
+[![npm downloads](https://img.shields.io/npm/dm/klazy)](https://www.npmjs.com/package/klazy)
+[![license](https://img.shields.io/npm/l/klazy)](https://github.com/discotrooper/klazy/blob/main/LICENSE)
+
 Fuzzy kubectl wrapper. No dependencies.
 
 ```bash

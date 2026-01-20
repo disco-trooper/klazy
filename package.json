@@ -4,7 +4,11 @@
   "description": "klazy - lazy kubectl wrapper with fuzzy search",
   "main": "lib/index.js",
   "license": "MIT",
-  "homepage": "https://github.com/prunevac/laku",
+  "homepage": "https://github.com/discotrooper/klazy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/discotrooper/klazy.git"
+  },
   "bin": {
     "klazy": "./lib/index.js"
   },
