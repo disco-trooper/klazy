@@ -53,13 +53,3 @@ export const repeatLastCommand = (): void => {
     const args = parseKubectlCommand(command);
     spawnSync('kubectl', args, { stdio: 'inherit' });
 };
-
-export const showLastCommand = (): void => {
-    const config = configuration.get();
-    const command = config?.[lastCommandKey];
-    if (!command) {
-        console.log('no last command stored');
-        return;
-    }
-    console.log(`Last command: ${command}`);
-};

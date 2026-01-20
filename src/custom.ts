@@ -46,7 +46,7 @@ export const isCustomCommand = (commandName: string): boolean => {
     return commands?.some(c => c.name === commandName) ?? false;
 };
 
-export const runCustomCommand = async (commandName: string, allNamespaces: boolean = false): Promise<void> => {
+export const runCustomCommand = async (commandName: string): Promise<void> => {
     if (!isCustomConfigValid) {
         console.log(`cannot run command ${commandName}, configuration is invalid`);
         return;
