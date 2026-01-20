@@ -58,6 +58,7 @@ export async function streamLogs(resourceType: string, searchTerm: string | unde
         const selected = await select({question: 'Select service:', options: displayNames, autocomplete: true});
         if (!selected) return;
         const idx = displayNames.indexOf(selected);
+        if (idx === -1) return;
         selectedService = services[filtered[idx].originalIndex];
       }
     } else {
@@ -65,6 +66,7 @@ export async function streamLogs(resourceType: string, searchTerm: string | unde
       const selected = await select({question: 'Select service:', options: displayNames, autocomplete: true});
       if (!selected) return;
       const idx = displayNames.indexOf(selected);
+      if (idx === -1) return;
       selectedService = services[idx];
     }
 
@@ -105,6 +107,7 @@ export async function streamLogs(resourceType: string, searchTerm: string | unde
         const selected = await select({question: 'Select pod:', options: displayNames, autocomplete: true});
         if (!selected) return;
         const idx = displayNames.indexOf(selected);
+        if (idx === -1) return;
         selectedPod = pods[filtered[idx].originalIndex];
       }
     } else {
@@ -112,6 +115,7 @@ export async function streamLogs(resourceType: string, searchTerm: string | unde
       const selected = await select({question: 'Select pod:', options: displayNames, autocomplete: true});
       if (!selected) return;
       const idx = displayNames.indexOf(selected);
+      if (idx === -1) return;
       selectedPod = pods[idx];
     }
 

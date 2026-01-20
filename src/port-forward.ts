@@ -38,6 +38,7 @@ export async function portForward(resourceType: string, allNamespaces: boolean =
     const selected = await select({question: 'Select service:', options: displayNames, autocomplete: true});
     if (!selected) return;
     const idx = displayNames.indexOf(selected);
+    if (idx === -1) return;
     const selectedService = services[idx];
     resourceName = selectedService.name;
     namespace = selectedService.namespace || getCurrentNamespace();
@@ -51,6 +52,7 @@ export async function portForward(resourceType: string, allNamespaces: boolean =
     const selected = await select({question: 'Select pod:', options: displayNames, autocomplete: true});
     if (!selected) return;
     const idx = displayNames.indexOf(selected);
+    if (idx === -1) return;
     const selectedPod = pods[idx];
     resourceName = selectedPod.name;
     namespace = selectedPod.namespace || getCurrentNamespace();

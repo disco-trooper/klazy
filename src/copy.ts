@@ -20,6 +20,7 @@ export async function copyFiles(srcArg: string | undefined, destArg: string | un
     const selected = await select({question: 'Select pod:', options: displayNames, autocomplete: true});
     if (!selected) return;
     const idx = displayNames.indexOf(selected);
+    if (idx === -1) return;
     const selectedPod = pods[idx];
     const ns = selectedPod.namespace || getCurrentNamespace();
 
