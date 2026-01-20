@@ -4,6 +4,7 @@ import { select } from './cli';
 import { fuzzyFilter } from './fuzzy';
 import { getCurrentNamespace } from './namespace';
 import { getPods } from './exec';
+import { getServices } from './port-forward';
 import type { Pod, Service, FuzzyResult } from './types';
 
 function getServicePods(serviceName: string, namespace: string): string[] {
@@ -28,19 +29,6 @@ function getServicePods(serviceName: string, namespace: string): string[] {
   } catch {
     return [];
   }
-}
-
-function getServices(allNamespaces: boolean = false): Service[] {
-  const args = ['get', 'services', '-o', 'jsonpath={range .items[*]}{.metadata.name}{"\\t"}{.metadata.namespace}{"\\n"}{end}'];
-  if (allNamespaces) args.splice(2, 0, '--all-namespaces');
-
-  const result = spawnSync('kubectl', args, { encoding: 'utf8' });
-  if (result.status !== 0) return [];
-
-  return result.stdout.trim().split('\n').filter(Boolean).map(line => {
-    const [name, namespace] = line.split('\t');
-    return { name, namespace };
-  });
 }
 
 export async function streamLogs(resourceType: string, searchTerm: string | undefined, allNamespaces: boolean = false, follow: boolean = true): Promise<void> {
