@@ -40,4 +40,13 @@ export function colorizeStatus(status: string): string {
   return colorize(status, color);
 }
 
+export function logError(action: string, detail?: string): void {
+  const message = detail ? `Failed to ${action}: ${detail}` : `Failed to ${action}`;
+  console.log(colorize(message, 'red'));
+}
+
+export function logWarning(message: string): void {
+  console.log(colorize(message, 'yellow'));
+}
+
 export { COLORS };
