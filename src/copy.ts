@@ -1,11 +1,21 @@
 // src/copy.ts
 import { spawnSync } from 'node:child_process';
+import * as path from 'node:path';
 import { select, input } from './cli';
 import { fuzzyFilter } from './fuzzy';
 import { getCurrentNamespace } from './namespace';
 import { colorize } from './colors';
 import { getPods } from './exec';
 import type { Pod } from './types';
+
+/**
+ * Validates local path doesn't escape via traversal
+ */
+function isPathSafe(localPath: string): boolean {
+  const resolved = path.resolve(localPath);
+  const cwd = process.cwd();
+  return resolved.startsWith(cwd) || path.isAbsolute(localPath);
+}
 
 export async function copyFiles(srcArg: string | undefined, destArg: string | undefined, allNamespaces: boolean = false): Promise<void> {
   const pods = getPods(allNamespaces);
@@ -28,9 +38,15 @@ export async function copyFiles(srcArg: string | undefined, destArg: string | un
     const directionSel = await select({question: 'Copy direction:', options: directions});
     if (!directionSel) return;
     const direction = directions.indexOf(directionSel);
+    if (direction === -1) return;
 
     const remotePath = await input({question: 'Remote path (in pod)'});
     const localPath = await input({question: 'Local path'});
+
+    if (!isPathSafe(localPath)) {
+      console.log(colorize('Warning: Path traversal detected. Use absolute path or path within current directory.', 'yellow'));
+      return;
+    }
 
     if (direction === 0) {
       spawnSync('kubectl', ['cp', `${ns}/${selectedPod.name}:${remotePath}`, localPath], { stdio: 'inherit' });
@@ -45,7 +61,9 @@ export async function copyFiles(srcArg: string | undefined, destArg: string | un
   const dest = destArg || '.';
 
   if (src.includes(':')) {
-    const [podPart, pathPart] = src.split(':');
+    const colonIdx = src.indexOf(':');
+    const podPart = src.substring(0, colonIdx);
+    const pathPart = src.substring(colonIdx + 1);
     const podNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
     const filtered = fuzzyFilter(podNames, podPart);
 
@@ -60,7 +78,9 @@ export async function copyFiles(srcArg: string | undefined, destArg: string | un
     spawnSync('kubectl', ['cp', `${ns}/${selectedPod.name}:${pathPart}`, dest], { stdio: 'inherit' });
     console.log(colorize('Copy completed', 'green'));
   } else if (dest.includes(':')) {
-    const [podPart, pathPart] = dest.split(':');
+    const colonIdx = dest.indexOf(':');
+    const podPart = dest.substring(0, colonIdx);
+    const pathPart = dest.substring(colonIdx + 1);
     const podNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
     const filtered = fuzzyFilter(podNames, podPart);
 
