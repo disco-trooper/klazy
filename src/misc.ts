@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { select, input } from './cli';
 import { fuzzyFilter } from './fuzzy';
-import type { Context, Pod } from './types';
+import type { Context, Pod, Service } from './types';
 
 const SELECTED_CONTEXT_REGEX = /^\s*\*/;
 const MAX_PORT = 65535;
@@ -126,4 +126,44 @@ export async function selectPod(
   const idx = podNames.indexOf(selected);
   if (idx === -1) return undefined;
   return pods[idx];
+}
+
+/**
+ * Interactive service selection with optional fuzzy search
+ */
+export async function selectService(
+  services: Service[],
+  searchTerm: string | undefined,
+  allNamespaces: boolean,
+  question: string = 'Select service:'
+): Promise<Service | undefined> {
+  if (services.length === 0) {
+    console.log('No services found');
+    return undefined;
+  }
+
+  const serviceNames = services.map(s => allNamespaces ? `${s.namespace}/${s.name}` : s.name);
+
+  if (searchTerm) {
+    const filtered = fuzzyFilter(serviceNames, searchTerm);
+    if (filtered.length === 0) {
+      console.log(`No services matching "${searchTerm}"`);
+      return undefined;
+    }
+    if (filtered.length === 1) {
+      return services[filtered[0].originalIndex];
+    }
+    const displayNames = filtered.map(f => serviceNames[f.originalIndex]);
+    const selected = await select({ question, options: displayNames, autocomplete: true });
+    if (!selected) return undefined;
+    const idx = displayNames.indexOf(selected);
+    if (idx === -1) return undefined;
+    return services[filtered[idx].originalIndex];
+  }
+
+  const selected = await select({ question, options: serviceNames, autocomplete: true });
+  if (!selected) return undefined;
+  const idx = serviceNames.indexOf(selected);
+  if (idx === -1) return undefined;
+  return services[idx];
 }

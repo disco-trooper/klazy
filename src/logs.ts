@@ -1,11 +1,11 @@
 // src/logs.ts
 import { spawnSync, spawn, ChildProcess } from 'node:child_process';
 import { select } from './cli';
-import { fuzzyFilter } from './fuzzy';
 import { getCurrentNamespace } from './namespace';
 import { getPods } from './exec';
 import { getServices } from './port-forward';
-import type { Pod, Service, FuzzyResult, ResourceType } from './types';
+import { selectService, selectPod } from './misc';
+import type { ResourceType } from './types';
 
 function getServicePods(serviceName: string, namespace: string): string[] {
   const selectorResult = spawnSync('kubectl', [
@@ -39,37 +39,8 @@ export async function streamLogs(resourceType: ResourceType, searchTerm: string 
   if (resourceType === 'service') {
     // Service logs - select service, then its pod
     const services = getServices(allNamespaces);
-    if (services.length === 0) {
-      console.log('No services found');
-      return;
-    }
-
-    let selectedService: Service;
-    if (searchTerm) {
-      const names = services.map(s => allNamespaces ? `${s.namespace}/${s.name}` : s.name);
-      const filtered = fuzzyFilter(names, searchTerm);
-      if (filtered.length === 0) {
-        console.log(`No services matching "${searchTerm}"`);
-        return;
-      }
-      if (filtered.length === 1) {
-        selectedService = services[filtered[0].originalIndex];
-      } else {
-        const displayNames = filtered.map(f => names[f.originalIndex]);
-        const selected = await select({question: 'Select service:', options: displayNames, autocomplete: true});
-        if (!selected) return;
-        const idx = displayNames.indexOf(selected);
-        if (idx === -1) return;
-        selectedService = services[filtered[idx].originalIndex];
-      }
-    } else {
-      const displayNames = services.map(s => allNamespaces ? `${s.namespace}/${s.name}` : s.name);
-      const selected = await select({question: 'Select service:', options: displayNames, autocomplete: true});
-      if (!selected) return;
-      const idx = displayNames.indexOf(selected);
-      if (idx === -1) return;
-      selectedService = services[idx];
-    }
+    const selectedService = await selectService(services, searchTerm, allNamespaces);
+    if (!selectedService) return;
 
     namespace = selectedService.namespace || getCurrentNamespace();
     const servicePods = getServicePods(selectedService.name, namespace);
@@ -88,37 +59,8 @@ export async function streamLogs(resourceType: ResourceType, searchTerm: string 
   } else {
     // Pod logs
     const pods = getPods(allNamespaces);
-    if (pods.length === 0) {
-      console.log('No pods found');
-      return;
-    }
-
-    let selectedPod: Pod;
-    if (searchTerm) {
-      const podNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
-      const filtered = fuzzyFilter(podNames, searchTerm);
-      if (filtered.length === 0) {
-        console.log(`No pods matching "${searchTerm}"`);
-        return;
-      }
-      if (filtered.length === 1) {
-        selectedPod = pods[filtered[0].originalIndex];
-      } else {
-        const displayNames = filtered.map(f => podNames[f.originalIndex]);
-        const selected = await select({question: 'Select pod:', options: displayNames, autocomplete: true});
-        if (!selected) return;
-        const idx = displayNames.indexOf(selected);
-        if (idx === -1) return;
-        selectedPod = pods[filtered[idx].originalIndex];
-      }
-    } else {
-      const displayNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
-      const selected = await select({question: 'Select pod:', options: displayNames, autocomplete: true});
-      if (!selected) return;
-      const idx = displayNames.indexOf(selected);
-      if (idx === -1) return;
-      selectedPod = pods[idx];
-    }
+    const selectedPod = await selectPod(pods, searchTerm, allNamespaces, 'Select pod:');
+    if (!selectedPod) return;
 
     podName = selectedPod.name;
     namespace = selectedPod.namespace || getCurrentNamespace();
