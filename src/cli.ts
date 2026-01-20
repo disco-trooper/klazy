@@ -1,10 +1,11 @@
-const {EventEmitter} = require('node:events');
-const readline = require('node:readline');
-const {fuzzyFilter} = require('./fuzzy');
-const {colorizeStatus} = require('./colors');
+import { EventEmitter } from 'node:events';
+import * as readline from 'node:readline';
+import { fuzzyFilter } from './fuzzy';
+import { colorizeStatus } from './colors';
+import type { SelectConfig, InputConfig } from './types';
 
 // Helper function to colorize status in option text
-function colorizeOption(option) {
+function colorizeOption(option: string): string {
   const statusMatch = option.match(/(Running|Pending|Error|CrashLoopBackOff|Completed|Failed|Succeeded|ContainerCreating|ImagePullBackOff|Terminated)/);
   if (statusMatch) {
     return option.replace(statusMatch[0], colorizeStatus(statusMatch[0]));
@@ -12,30 +13,28 @@ function colorizeOption(option) {
   return option;
 }
 
-const ARROW_UP = '\x1B[A';
-const ARROW_DOWN = '\x1B[B';
-const ENTER = '\x0D';
-const CTRLC = '\x03';
-const DELETE = '\x1B[3~';
-const BACKSPACE = '\b';
-const BACKSPACE2 = String.fromCharCode(127)
-const ARROW_LEFT = '\x1B[D';
-const ARROW_RIGHT = '\x1B[C';
-const highlight = (str) => `${makeBold(str)} <-`;
-const write = (str) => process.stdout.write(str);
-const newline = () => write('\n');
-const hideCursor = () => write('\x1B[?25l');
-const showCursor = () => write('\x1B[?25h');
-const makeBold = (str) => `\x1b[1m${str}\x1b[22m`;
-const CHOICES_ON_SCREEN = 5;
-const AUTOCOMPLETE_LABEL = '>>> autocomplete: ';
+const ARROW_UP: string = '\x1B[A';
+const ARROW_DOWN: string = '\x1B[B';
+const ENTER: string = '\x0D';
+const CTRLC: string = '\x03';
+const DELETE: string = '\x1B[3~';
+const BACKSPACE: string = '\b';
+const BACKSPACE2: string = String.fromCharCode(127);
+const ARROW_LEFT: string = '\x1B[D';
+const ARROW_RIGHT: string = '\x1B[C';
+const highlight = (str: string): string => `${makeBold(str)} <-`;
+const write = (str: string): boolean => process.stdout.write(str);
+const newline = (): boolean => write('\n');
+const hideCursor = (): boolean => write('\x1B[?25l');
+const showCursor = (): boolean => write('\x1B[?25h');
+const makeBold = (str: string): string => `\x1b[1m${str}\x1b[22m`;
+const CHOICES_ON_SCREEN: number = 5;
+const AUTOCOMPLETE_LABEL: string = '>>> autocomplete: ';
 
 /**
  * Interactive selection from options list
- * @param {{question: string, options: string[], pointer?: number, autocomplete?: boolean}} config
- * @returns {Promise<string>} Selected option string, or empty string if cancelled/no options
  */
-const select = ({question, options, pointer, autocomplete}) => {
+export const select = ({ question, options, pointer, autocomplete }: SelectConfig): Promise<string> => {
     if (!options || options.length === 0) {
         console.log('No options available');
         return Promise.resolve('');
@@ -45,19 +44,14 @@ const select = ({question, options, pointer, autocomplete}) => {
         throw new Error('process stdin is not tty (the script is run via child process probably..)');
     }
 
-    const emitter = new EventEmitter();
-    /** @type number */
-    let currentPointer;
-    /** @type Array<number> */
-    let visibleOptionsIndices;
-    /** @type string */
-    let autocompleteString = '';
-    /** @type number */
-    let autoCompleteStringPointer = 0;
-    /** @type boolean */
-    let invalidSelection = false;
+    const emitter: EventEmitter = new EventEmitter();
+    let currentPointer: number;
+    let visibleOptionsIndices: number[];
+    let autocompleteString: string = '';
+    let autoCompleteStringPointer: number = 0;
+    let invalidSelection: boolean = false;
 
-    function dataHandler(character) {
+    function dataHandler(character: string): void {
         switch (character) {
             case ARROW_UP:
                 up();
@@ -76,18 +70,18 @@ const select = ({question, options, pointer, autocomplete}) => {
         }
     }
 
-    const isAutocompleteActive = () => autocomplete && autocompleteString;
+    const isAutocompleteActive = (): boolean => !!(autocomplete && autocompleteString);
 
-    const isRangeAlwaysVisible = () => options.length <= CHOICES_ON_SCREEN;
+    const isRangeAlwaysVisible = (): boolean => options.length <= CHOICES_ON_SCREEN;
 
-    const doAutoComplete = () => {
+    const doAutoComplete = (): void => {
         process.stdout.clearLine(0);
         process.stdout.cursorTo(0);
         write(AUTOCOMPLETE_LABEL);
         write(autocompleteString);
         process.stdout.cursorTo(AUTOCOMPLETE_LABEL.length + autoCompleteStringPointer);
 
-        const autocompleteCompliantIndices = getAutocompleteCompliantIndices();
+        const autocompleteCompliantIndices: number[] = getAutocompleteCompliantIndices();
         visibleOptionsIndices = autocompleteCompliantIndices.slice(0, CHOICES_ON_SCREEN);
         currentPointer = visibleOptionsIndices[0];
 
@@ -100,13 +94,12 @@ const select = ({question, options, pointer, autocomplete}) => {
         rePrint();
     };
 
-    /** @return {Array<number>} */
-    const getAutocompleteCompliantIndices = () => {
+    const getAutocompleteCompliantIndices = (): number[] => {
         const filtered = fuzzyFilter(options, autocompleteString);
         return filtered.map(f => f.originalIndex);
     };
 
-    const autocompleteHandler = (character) => {
+    const autocompleteHandler = (character: string): void => {
         if (!autocomplete) {
             return;
         }
@@ -114,13 +107,13 @@ const select = ({question, options, pointer, autocomplete}) => {
             case ARROW_LEFT:
                 if (autoCompleteStringPointer !== 0) {
                     autoCompleteStringPointer--;
-                    process.stdout.moveCursor(-1);
+                    process.stdout.moveCursor(-1, 0);
                 }
                 break;
             case ARROW_RIGHT:
                 if (autoCompleteStringPointer !== autocompleteString.length) {
                     autoCompleteStringPointer++;
-                    process.stdout.moveCursor(1);
+                    process.stdout.moveCursor(1, 0);
                 }
                 break;
             case DELETE:
@@ -148,7 +141,7 @@ const select = ({question, options, pointer, autocomplete}) => {
         }
     };
 
-    const up = () => {
+    const up = (): void => {
         if (invalidSelection) {
             return;
         }
@@ -161,7 +154,7 @@ const select = ({question, options, pointer, autocomplete}) => {
             }
 
             if (isAutocompleteActive()) {
-                const autocompleteCompliantIndices = getAutocompleteCompliantIndices();
+                const autocompleteCompliantIndices: number[] = getAutocompleteCompliantIndices();
                 if (autocompleteCompliantIndices.length <= CHOICES_ON_SCREEN) {
                     // just change the pointer
                     currentPointer = autocompleteCompliantIndices[autocompleteCompliantIndices.length - 1];
@@ -173,14 +166,14 @@ const select = ({question, options, pointer, autocomplete}) => {
                 if (autocompleteCompliantIndices[0] === visibleOptionsIndices[0]) {
                     // overflow and shift the window to the bottom
                     visibleOptionsIndices = [];
-                    for (let i = CHOICES_ON_SCREEN - 1; i >= 0; i--) {
+                    for (let i: number = CHOICES_ON_SCREEN - 1; i >= 0; i--) {
                         visibleOptionsIndices.push(autocompleteCompliantIndices[autocompleteCompliantIndices.length - i - 1]);
                     }
                     currentPointer = visibleOptionsIndices[visibleOptionsIndices.length - 1];
                 } else {
                     // simple shift by one up
                     visibleOptionsIndices.pop();
-                    const boundaryIndex = autocompleteCompliantIndices.findIndex(i => i === visibleOptionsIndices[0]);
+                    const boundaryIndex: number = autocompleteCompliantIndices.findIndex(i => i === visibleOptionsIndices[0]);
                     visibleOptionsIndices.unshift(autocompleteCompliantIndices[boundaryIndex - 1]);
                     currentPointer = visibleOptionsIndices[0];
                 }
@@ -198,13 +191,13 @@ const select = ({question, options, pointer, autocomplete}) => {
                 }
             }
         } else {
-            const index = visibleOptionsIndices.findIndex(i => i === currentPointer);
+            const index: number = visibleOptionsIndices.findIndex(i => i === currentPointer);
             currentPointer = visibleOptionsIndices[index - 1];
         }
         rePrint();
     };
 
-    const down = () => {
+    const down = (): void => {
         if (invalidSelection) {
             return;
         }
@@ -218,7 +211,7 @@ const select = ({question, options, pointer, autocomplete}) => {
 
 
             if (isAutocompleteActive()) {
-                const autocompleteCompliantIndices = getAutocompleteCompliantIndices();
+                const autocompleteCompliantIndices: number[] = getAutocompleteCompliantIndices();
                 if (autocompleteCompliantIndices.length <= CHOICES_ON_SCREEN) {
                     // just change the pointer
                     currentPointer = autocompleteCompliantIndices[0];
@@ -234,7 +227,7 @@ const select = ({question, options, pointer, autocomplete}) => {
                 } else {
                     // simple shift by one down
                     visibleOptionsIndices.shift();
-                    const boundaryIndex = autocompleteCompliantIndices.findIndex(i => i === visibleOptionsIndices[visibleOptionsIndices.length - 1]);
+                    const boundaryIndex: number = autocompleteCompliantIndices.findIndex(i => i === visibleOptionsIndices[visibleOptionsIndices.length - 1]);
                     visibleOptionsIndices.push(autocompleteCompliantIndices[boundaryIndex + 1]);
                     currentPointer = visibleOptionsIndices[visibleOptionsIndices.length - 1];
                 }
@@ -253,13 +246,13 @@ const select = ({question, options, pointer, autocomplete}) => {
 
             }
         } else {
-            const index = visibleOptionsIndices.findIndex(i => i === currentPointer);
+            const index: number = visibleOptionsIndices.findIndex(i => i === currentPointer);
             currentPointer = visibleOptionsIndices[index + 1];
         }
         rePrint();
     };
 
-    const enter = () => {
+    const enter = (): void => {
         if (invalidSelection) {
             return;
         }
@@ -274,7 +267,7 @@ const select = ({question, options, pointer, autocomplete}) => {
         emitter.emit('selection', options[currentPointer]);
     };
 
-    const ctrlc = () => {
+    const ctrlc = (): void => {
         process.stdout.moveCursor(0, visibleOptionsIndices.length);
         newline();
         write('EXIT..');
@@ -282,9 +275,8 @@ const select = ({question, options, pointer, autocomplete}) => {
         process.exit(0);
     };
 
-    const rePrint = () => {
-        /** @type Array<string> */
-        let opts;
+    const rePrint = (): void => {
+        let opts: string[];
         if (invalidSelection) {
             opts = ['> no option matches the filter'];
         } else {
@@ -308,7 +300,7 @@ const select = ({question, options, pointer, autocomplete}) => {
         });
 
         process.stdout.clearScreenDown();
-        const shiftUp = opts.length < CHOICES_ON_SCREEN ? opts.length : CHOICES_ON_SCREEN;
+        const shiftUp: number = opts.length < CHOICES_ON_SCREEN ? opts.length : CHOICES_ON_SCREEN;
         process.stdout.moveCursor(0, -shiftUp + 1);
         if (autocomplete) {
             process.stdout.moveCursor(0, -1);
@@ -323,7 +315,7 @@ const select = ({question, options, pointer, autocomplete}) => {
     if (currentPointer > CHOICES_ON_SCREEN) {
         currentPointer = CHOICES_ON_SCREEN;
     }
-    const range = CHOICES_ON_SCREEN < options.length ? CHOICES_ON_SCREEN : options.length;
+    const range: number = CHOICES_ON_SCREEN < options.length ? CHOICES_ON_SCREEN : options.length;
     visibleOptionsIndices = [...Array(range).keys()];
     rePrint();
 
@@ -334,30 +326,25 @@ const select = ({question, options, pointer, autocomplete}) => {
     process.stdin.setEncoding('utf-8');
     !autocomplete && hideCursor();
     process.stdin.on('data', dataHandler);
-    return new Promise((resolve) => {
-        emitter.on('selection', (selection) => resolve(selection));
+    return new Promise<string>((resolve) => {
+        emitter.on('selection', (selection: string) => resolve(selection));
     });
 };
 
 /**
- * todo proper jsdoc - no time :(
- * @param {string} question
- * @param {string} invalidWarning
- * @param defaultValue
- * @param validationCallback
- * @returns {Promise}
+ * Interactive input with validation
  */
-const input = ({question, invalidWarning, defaultValue, validationCallback = () => true}) => {
-    const emitter = new EventEmitter();
-    const rl = readline.createInterface({
+export const input = ({ question, invalidWarning, defaultValue, validationCallback = () => true }: InputConfig): Promise<string> => {
+    const emitter: EventEmitter = new EventEmitter();
+    const rl: readline.Interface = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
     });
 
-    const ask = () => {
-        const qstn = defaultValue ? `${question} [${defaultValue}]` : question;
-        rl.question(`${qstn}: `, (answer) => {
-            const isDefaultAnswer = defaultValue && answer === '';
+    const ask = (): void => {
+        const qstn: string = defaultValue ? `${question} [${defaultValue}]` : question;
+        rl.question(`${qstn}: `, (answer: string) => {
+            const isDefaultAnswer: boolean = !!(defaultValue && answer === '');
             if (isDefaultAnswer) {
                 emitter.emit('selection', defaultValue);
                 rl.close();
@@ -374,12 +361,7 @@ const input = ({question, invalidWarning, defaultValue, validationCallback = () 
     };
     ask();
 
-    return new Promise((resolve) => {
-        emitter.on('selection', (selection) => resolve(selection));
+    return new Promise<string>((resolve) => {
+        emitter.on('selection', (selection: string) => resolve(selection));
     });
-};
-
-module.exports = {
-    input,
-    select,
 };

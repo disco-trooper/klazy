@@ -1,11 +1,11 @@
-const { spawnSync } = require('node:child_process');
-const {getContexts, selectContext} = require('./misc');
-const { getConfig, writeConfig } = require('./config');
-const { colorize } = require('./colors');
+import { spawnSync } from 'node:child_process';
+import { getContexts, selectContext } from './misc';
+import { getConfig, writeConfig } from './config';
+import { colorize } from './colors';
 
-const useContext = async (targetContext) => {
+export async function useContext(targetContext?: string): Promise<void> {
     const config = getConfig();
-    let currentContext;
+    let currentContext: string;
     try {
         const result = spawnSync('kubectl', ['config', 'current-context'], { encoding: 'utf8' });
         if (result.status !== 0) {
@@ -18,7 +18,7 @@ const useContext = async (targetContext) => {
         return;
     }
 
-    let newContext;
+    let newContext: string | undefined;
 
     if (targetContext === '-') {
         if (!config.previousContext) {
@@ -33,16 +33,20 @@ const useContext = async (targetContext) => {
         newContext = await selectContext();
     }
 
+    if (!newContext) {
+        return;
+    }
+
     config.previousContext = currentContext;
     writeConfig(config);
 
-    spawnSync('kubectl', ['config', 'use-context', newContext], {stdio: 'inherit'});
+    spawnSync('kubectl', ['config', 'use-context', newContext], { stdio: 'inherit' });
     console.log(`Switched to context: ${colorize(newContext, 'cyan')}`);
 }
 
-const showCurrentContext = () => {
+export function showCurrentContext(): void {
     const contexts = getContexts();
-    const current = contexts.find(c=>c.current);
+    const current = contexts.find((c) => c.current);
     if (!current) {
         console.log('No current context found');
         return;
@@ -50,8 +54,6 @@ const showCurrentContext = () => {
     console.log(`current context: ${colorize(current.name, 'cyan')}`);
 }
 
-const showAllContexts = () => {
-    spawnSync('kubectl', ['config', 'get-contexts'], {stdio: 'inherit'});
+export function showAllContexts(): void {
+    spawnSync('kubectl', ['config', 'get-contexts'], { stdio: 'inherit' });
 }
-
-module.exports = {useContext, showCurrentContext, showAllContexts};

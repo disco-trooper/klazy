@@ -1,10 +1,10 @@
-// lib/namespace.js
-const { spawnSync } = require('node:child_process');
-const { select } = require('./cli');
-const { getConfig, writeConfig } = require('./config');
-const { colorize } = require('./colors');
+// lib/namespace.ts
+import { spawnSync } from 'node:child_process';
+import { select } from './cli';
+import { getConfig, writeConfig } from './config';
+import { colorize } from './colors';
 
-function getNamespaces() {
+export function getNamespaces(): string[] {
   const result = spawnSync('kubectl', ['get', 'namespaces', '-o', 'jsonpath={.items[*].metadata.name}'], { encoding: 'utf8' });
   if (result.status !== 0) {
     return [];
@@ -12,7 +12,7 @@ function getNamespaces() {
   return result.stdout.trim().split(' ').filter(Boolean);
 }
 
-function getCurrentNamespace() {
+export function getCurrentNamespace(): string {
   try {
     const result = spawnSync('kubectl', ['config', 'view', '--minify', '-o', 'jsonpath={..namespace}'], { encoding: 'utf8' });
     if (result.status !== 0) {
@@ -24,15 +24,15 @@ function getCurrentNamespace() {
   }
 }
 
-function setNamespace(ns) {
+function setNamespace(ns: string): void {
   spawnSync('kubectl', ['config', 'set-context', '--current', `--namespace=${ns}`], { encoding: 'utf8' });
 }
 
-async function useNamespace(targetNs) {
+export async function useNamespace(targetNs?: string): Promise<void> {
   const config = getConfig();
   const currentNs = getCurrentNamespace();
 
-  let newNs;
+  let newNs: string;
 
   if (targetNs === '-') {
     if (!config.previousNamespace) {
@@ -55,5 +55,3 @@ async function useNamespace(targetNs) {
   setNamespace(newNs);
   console.log(`Switched to namespace: ${colorize(newNs, 'magenta')}`);
 }
-
-module.exports = { useNamespace, getCurrentNamespace, getNamespaces };
