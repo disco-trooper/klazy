@@ -4,6 +4,7 @@ import { fuzzyFilter } from './fuzzy';
 import type { Context, Pod } from './types';
 
 const SELECTED_CONTEXT_REGEX = /^\s*\*/;
+const MAX_PORT = 65535;
 
 /**
  * Get all kubectl contexts
@@ -44,7 +45,9 @@ export function selectNamespace(context: string): Promise<string> {
     const nsRaw = result.stdout;
     const nsSplit = nsRaw.trim().split('\n');
     nsSplit.shift();
-    const namespaces = nsSplit.map(s => s.trim().split(/\s/).shift() as string);
+    const namespaces = nsSplit
+      .map(s => s.trim().split(/\s/)[0])
+      .filter((name): name is string => Boolean(name));
     return select({ question: 'select namespace', options: namespaces, autocomplete: true });
 }
 
@@ -59,7 +62,9 @@ export function selectResource(resource: string, context: string, namespace: str
     const podsRaw = result.stdout;
     const resourceSplit = podsRaw.trim().split('\n');
     resourceSplit.shift();
-    const resources = resourceSplit.map(s => s.trim().split(/\s/).shift() as string);
+    const resources = resourceSplit
+      .map(s => s.trim().split(/\s/)[0])
+      .filter((name): name is string => Boolean(name));
     return select({ question: `select ${resource}`, options: resources, autocomplete: true });
 }
 
@@ -68,7 +73,7 @@ export function selectResource(resource: string, context: string, namespace: str
  */
 export function validatePort(value: string): boolean {
     const numVal = Number(value);
-    return !isNaN(numVal) && numVal >= 0 && numVal <= 65535;
+    return !isNaN(numVal) && numVal >= 0 && numVal <= MAX_PORT;
 }
 
 /**
