@@ -19,7 +19,7 @@ const RESOURCE_ALIASES: Record<string, string> = {
   'node': 'nodes', 'nodes': 'nodes',
 };
 
-const RESOURCE_OPTIONS: string[] = ['pods', 'services', 'deployments', 'statefulsets', 'daemonsets', 'configmaps', 'secrets', 'ingresses'];
+const RESOURCE_OPTIONS: string[] = ['pods', 'services', 'deployments', 'statefulsets', 'daemonsets', 'configmaps', 'secrets', 'ingresses', 'persistentvolumeclaims', 'namespaces', 'nodes'];
 
 function resolveResourceType(input: string): string | null {
   if (!input) return null;

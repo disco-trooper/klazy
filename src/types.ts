@@ -21,7 +21,10 @@ export type GetResourceType =
   | 'daemonsets' | 'ds' | 'daemonset'
   | 'configmaps' | 'cm' | 'configmap'
   | 'secrets' | 'secret'
-  | 'ingresses' | 'ing' | 'ingress';
+  | 'ingresses' | 'ing' | 'ingress'
+  | 'persistentvolumeclaims' | 'pvc'
+  | 'namespaces' | 'ns'
+  | 'nodes' | 'node';
 
 export interface Context {
   name: string;
