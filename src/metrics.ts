@@ -1,8 +1,8 @@
-// lib/metrics.js
-const { execSync } = require('node:child_process');
-const { colorize } = require('./colors');
+// lib/metrics.ts
+import { execSync } from 'node:child_process';
+import { colorize } from './colors';
 
-async function showMetrics(resourceType = 'pods', allNamespaces = false) {
+async function showMetrics(resourceType: string = 'pods', allNamespaces: boolean = false): Promise<void> {
   const nsFlag = allNamespaces ? '--all-namespaces' : '';
   const type = resourceType === 'nodes' ? 'nodes' : 'pods';
 
@@ -14,4 +14,4 @@ async function showMetrics(resourceType = 'pods', allNamespaces = false) {
   }
 }
 
-module.exports = { showMetrics };
+export { showMetrics };

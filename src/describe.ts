@@ -1,12 +1,16 @@
-// lib/describe.js
-const { spawnSync } = require('node:child_process');
-const { select } = require('./cli');
-const { fuzzyFilter } = require('./fuzzy');
-const { getCurrentNamespace } = require('./namespace');
-const { getPods } = require('./exec');
-const { colorizeStatus } = require('./colors');
+// lib/describe.ts
+import { spawnSync } from 'node:child_process';
+import { select } from './cli';
+import { fuzzyFilter } from './fuzzy';
+import { getCurrentNamespace } from './namespace';
+import { getPods } from './exec';
+import { colorizeStatus } from './colors';
+import type { Pod } from './types';
 
-function colorizeDescribe(output) {
+/**
+ * Colorize status values in kubectl describe output
+ */
+function colorizeDescribe(output: string): string {
   return output.split('\n').map(line => {
     // Match whole words only, or status at end of line
     return line.replace(/\b(Running|Pending|Waiting|Terminated|Error|CrashLoopBackOff|Completed|Failed|Succeeded|ContainerCreating|ImagePullBackOff)\b|(?<=:\s+)(True|False)(?=\s*$)/g,
@@ -14,7 +18,10 @@ function colorizeDescribe(output) {
   }).join('\n');
 }
 
-async function describePod(searchTerm, allNamespaces = false) {
+/**
+ * Describe a pod with colorized output
+ */
+export async function describePod(searchTerm?: string, allNamespaces: boolean = false): Promise<void> {
   const pods = getPods(allNamespaces);
 
   if (pods.length === 0) {
@@ -22,7 +29,7 @@ async function describePod(searchTerm, allNamespaces = false) {
     return;
   }
 
-  let selectedPod;
+  let selectedPod: Pod | undefined;
 
   if (searchTerm) {
     const podNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
@@ -56,5 +63,3 @@ async function describePod(searchTerm, allNamespaces = false) {
     console.log(result.stderr || 'Failed to describe pod');
   }
 }
-
-module.exports = { describePod };

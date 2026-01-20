@@ -1,8 +1,14 @@
-const {configuration, customCommandsKey} = require("./config");
-const {isCustomConfigValid} = require("./custom");
+import { configuration, customCommandsKey } from "./config";
+import { isCustomConfigValid } from "./custom";
 
+interface CustomCommand {
+    name: string;
+    description: string;
+}
 
-const optionMap = {
+type OptionDescription = string | string[];
+
+const optionMap: Record<string, OptionDescription> = {
     'c': 'select context',
     'c <name>': 'switch to context directly',
     'c -': 'switch to previous context',
@@ -51,9 +57,9 @@ const optionMap = {
     'completion zsh': 'Output zsh completion script',
 };
 
-const validArgs = Object.keys(optionMap);
+const validArgs: string[] = Object.keys(optionMap);
 
-const printHelp = () => {
+const printHelp = (): void => {
     console.log('klazy (lazy kubectl) is a command line (semi)interactive tool for easier usage of some kubectl commands');
     console.group('options:');
     validArgs.forEach(option => {
@@ -64,11 +70,11 @@ const printHelp = () => {
     console.groupEnd();
 };
 
-const printCustomCommands = () => {
+const printCustomCommands = (): void => {
     if(!isCustomConfigValid) {
         return
     }
-    const customCommands = configuration.get()[customCommandsKey]
+    const customCommands: CustomCommand[] = configuration.get()[customCommandsKey]
     console.log()
     console.log('--- custom commands ---')
     customCommands.forEach(({name, description}) => {
@@ -76,7 +82,7 @@ const printCustomCommands = () => {
     })
 }
 
-const printOne = (commandName, description) => {
+const printOne = (commandName: string, description: OptionDescription): void => {
     const padWidth = 18;
     if (Array.isArray(description)) {
         description.forEach((item, i) => {
@@ -92,4 +98,4 @@ const printOne = (commandName, description) => {
     console.log(commandName.padEnd(padWidth), description);
 }
 
-module.exports = {printHelp};
+export { printHelp };

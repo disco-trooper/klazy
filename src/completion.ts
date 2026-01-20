@@ -1,6 +1,6 @@
-// lib/completion.js
+// lib/completion.ts
 
-function generateZshCompletion() {
+function generateZshCompletion(): string {
   return `#compdef klazy
 _klazy() {
   local -a commands
@@ -21,7 +21,7 @@ _klazy "$@"
 `;
 }
 
-function outputCompletion(shell) {
+function outputCompletion(shell: string): void {
   if (shell === 'zsh') {
     console.log(generateZshCompletion());
   } else {
@@ -30,4 +30,4 @@ function outputCompletion(shell) {
   }
 }
 
-module.exports = { outputCompletion };
+export { outputCompletion };

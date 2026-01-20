@@ -1,14 +1,15 @@
-// lib/port-forward.js
-const { spawnSync, spawn } = require('node:child_process');
-const { select, input } = require('./cli');
-const { configuration, lastCommandKey } = require('./config');
-const { getCurrentNamespace } = require('./namespace');
-const { colorize } = require('./colors');
-const { fuzzyFilter } = require('./fuzzy');
-const { getPods } = require('./exec');
-const { selectPort, validatePort } = require('./misc');
+// src/port-forward.ts
+import { spawnSync, spawn, ChildProcess } from 'node:child_process';
+import { select, input } from './cli';
+import { configuration, lastCommandKey } from './config';
+import { getCurrentNamespace } from './namespace';
+import { colorize } from './colors';
+import { fuzzyFilter } from './fuzzy';
+import { getPods } from './exec';
+import { selectPort, validatePort } from './misc';
+import type { Pod, Service } from './types';
 
-function getServices(allNamespaces = false) {
+export function getServices(allNamespaces: boolean = false): Service[] {
   const args = ['get', 'services', '-o', 'jsonpath={range .items[*]}{.metadata.name}{"\\t"}{.metadata.namespace}{"\\n"}{end}'];
   if (allNamespaces) args.splice(2, 0, '--all-namespaces');
 
@@ -21,8 +22,11 @@ function getServices(allNamespaces = false) {
   });
 }
 
-async function portForward(resourceType, allNamespaces = false) {
-  let resourceName, localPort, remotePort, namespace;
+export async function portForward(resourceType: string, allNamespaces: boolean = false): Promise<void> {
+  let resourceName: string;
+  let localPort: string;
+  let remotePort: string;
+  let namespace: string;
 
   if (resourceType === 'service') {
     const services = getServices(allNamespaces);
@@ -61,15 +65,13 @@ async function portForward(resourceType, allNamespaces = false) {
 
   console.log(`Port forwarding ${colorize(resourceName, 'cyan')} ${colorize(localPort, 'green')}:${colorize(remotePort, 'green')}`);
 
-  const proc = spawn('kubectl', ['port-forward', `${resource}/${resourceName}`, `${localPort}:${remotePort}`, '-n', namespace], {
+  const proc: ChildProcess = spawn('kubectl', ['port-forward', `${resource}/${resourceName}`, `${localPort}:${remotePort}`, '-n', namespace], {
     stdio: 'inherit'
   });
 
-  proc.on('close', (code) => {
+  proc.on('close', (code: number | null) => {
     if (code !== 0 && code !== null) {
       console.log(colorize(`Port forward ended (code ${code})`, 'yellow'));
     }
   });
 }
-
-module.exports = { portForward };

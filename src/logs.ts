@@ -1,11 +1,12 @@
-// lib/logs.js
-const { spawnSync, spawn } = require('node:child_process');
-const { select } = require('./cli');
-const { fuzzyFilter } = require('./fuzzy');
-const { getCurrentNamespace } = require('./namespace');
-const { getPods } = require('./exec');
+// src/logs.ts
+import { spawnSync, spawn, ChildProcess } from 'node:child_process';
+import { select } from './cli';
+import { fuzzyFilter } from './fuzzy';
+import { getCurrentNamespace } from './namespace';
+import { getPods } from './exec';
+import type { Pod, Service, FuzzyResult } from './types';
 
-function getServicePods(serviceName, namespace) {
+function getServicePods(serviceName: string, namespace: string): string[] {
   const selectorResult = spawnSync('kubectl', [
     'get', 'service', serviceName, '-n', namespace,
     '-o', 'jsonpath={.spec.selector}'
@@ -14,7 +15,7 @@ function getServicePods(serviceName, namespace) {
   if (selectorResult.status !== 0) return [];
 
   try {
-    const selector = JSON.parse(selectorResult.stdout.replace(/'/g, '"'));
+    const selector = JSON.parse(selectorResult.stdout.replace(/'/g, '"')) as Record<string, string>;
     const labelSelector = Object.entries(selector).map(([k, v]) => `${k}=${v}`).join(',');
 
     const podsResult = spawnSync('kubectl', [
@@ -29,7 +30,7 @@ function getServicePods(serviceName, namespace) {
   }
 }
 
-function getServices(allNamespaces = false) {
+function getServices(allNamespaces: boolean = false): Service[] {
   const args = ['get', 'services', '-o', 'jsonpath={range .items[*]}{.metadata.name}{"\\t"}{.metadata.namespace}{"\\n"}{end}'];
   if (allNamespaces) args.splice(2, 0, '--all-namespaces');
 
@@ -42,8 +43,9 @@ function getServices(allNamespaces = false) {
   });
 }
 
-async function streamLogs(resourceType, searchTerm, allNamespaces = false, follow = true) {
-  let podName, namespace;
+export async function streamLogs(resourceType: string, searchTerm: string | undefined, allNamespaces: boolean = false, follow: boolean = true): Promise<void> {
+  let podName: string;
+  let namespace: string;
 
   if (resourceType === 'service') {
     // Service logs - select service, then its pod
@@ -53,7 +55,7 @@ async function streamLogs(resourceType, searchTerm, allNamespaces = false, follo
       return;
     }
 
-    let selectedService;
+    let selectedService: Service;
     if (searchTerm) {
       const names = services.map(s => allNamespaces ? `${s.namespace}/${s.name}` : s.name);
       const filtered = fuzzyFilter(names, searchTerm);
@@ -100,7 +102,7 @@ async function streamLogs(resourceType, searchTerm, allNamespaces = false, follo
       return;
     }
 
-    let selectedPod;
+    let selectedPod: Pod;
     if (searchTerm) {
       const podNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
       const filtered = fuzzyFilter(podNames, searchTerm);
@@ -133,13 +135,11 @@ async function streamLogs(resourceType, searchTerm, allNamespaces = false, follo
   if (follow) args.push('-f');
 
   console.log(`Streaming logs from ${podName}...`);
-  const proc = spawn('kubectl', args, { stdio: 'inherit' });
+  const proc: ChildProcess = spawn('kubectl', args, { stdio: 'inherit' });
 
-  proc.on('close', (code) => {
+  proc.on('close', (code: number | null) => {
     if (code !== 0 && code !== null) {
       console.log(`\nLogs ended (code ${code})`);
     }
   });
 }
-
-module.exports = { streamLogs };

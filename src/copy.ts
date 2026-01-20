@@ -1,12 +1,13 @@
-// lib/copy.js
-const { spawnSync } = require('node:child_process');
-const { select, input } = require('./cli');
-const { fuzzyFilter } = require('./fuzzy');
-const { getCurrentNamespace } = require('./namespace');
-const { colorize } = require('./colors');
-const { getPods } = require('./exec');
+// src/copy.ts
+import { spawnSync } from 'node:child_process';
+import { select, input } from './cli';
+import { fuzzyFilter } from './fuzzy';
+import { getCurrentNamespace } from './namespace';
+import { colorize } from './colors';
+import { getPods } from './exec';
+import type { Pod } from './types';
 
-async function copyFiles(srcArg, destArg, allNamespaces = false) {
+export async function copyFiles(srcArg: string | undefined, destArg: string | undefined, allNamespaces: boolean = false): Promise<void> {
   const pods = getPods(allNamespaces);
   if (pods.length === 0) {
     console.log('No pods found');
@@ -76,5 +77,3 @@ async function copyFiles(srcArg, destArg, allNamespaces = false) {
     console.log('Usage: klazy copy <pod>:/path ./local or klazy copy ./local <pod>:/path');
   }
 }
-
-module.exports = { copyFiles };

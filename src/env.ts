@@ -1,12 +1,13 @@
-// lib/env.js
-const { spawnSync } = require('node:child_process');
-const { select } = require('./cli');
-const { fuzzyFilter } = require('./fuzzy');
-const { getCurrentNamespace } = require('./namespace');
-const { colorize } = require('./colors');
-const { getPods } = require('./exec');
+// src/env.ts
+import { spawnSync } from 'node:child_process';
+import { select } from './cli';
+import { fuzzyFilter } from './fuzzy';
+import { getCurrentNamespace } from './namespace';
+import { colorize } from './colors';
+import { getPods } from './exec';
+import type { Pod } from './types';
 
-function formatEnvOutput(envString) {
+function formatEnvOutput(envString: string): string {
   return envString.split('\n').filter(Boolean).map(line => {
     const [key, ...valueParts] = line.split('=');
     const value = valueParts.join('=');
@@ -14,7 +15,7 @@ function formatEnvOutput(envString) {
   }).join('\n');
 }
 
-async function showEnv(searchTerm, allNamespaces = false) {
+export async function showEnv(searchTerm?: string, allNamespaces: boolean = false): Promise<void> {
   const pods = getPods(allNamespaces);
 
   if (pods.length === 0) {
@@ -22,7 +23,7 @@ async function showEnv(searchTerm, allNamespaces = false) {
     return;
   }
 
-  let selectedPod;
+  let selectedPod: Pod | undefined;
 
   if (searchTerm) {
     const podNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
@@ -57,5 +58,3 @@ async function showEnv(searchTerm, allNamespaces = false) {
     console.log(colorize('Failed to get env. Pod might not be running.', 'red'));
   }
 }
-
-module.exports = { showEnv };

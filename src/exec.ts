@@ -1,10 +1,14 @@
-// lib/exec.js
-const { spawnSync, spawn } = require('node:child_process');
-const { select } = require('./cli');
-const { fuzzyFilter } = require('./fuzzy');
-const { getCurrentNamespace } = require('./namespace');
+// lib/exec.ts
+import { spawnSync, spawn } from 'node:child_process';
+import { select } from './cli';
+import { fuzzyFilter } from './fuzzy';
+import { getCurrentNamespace } from './namespace';
+import type { Pod } from './types';
 
-function getPods(allNamespaces = false) {
+/**
+ * Get all pods, optionally across all namespaces
+ */
+export function getPods(allNamespaces: boolean = false): Pod[] {
   const args = ['get', 'pods', '-o', 'jsonpath={range .items[*]}{.metadata.name}{"\\t"}{.metadata.namespace}{"\\n"}{end}'];
   if (allNamespaces) args.splice(2, 0, '--all-namespaces');
 
@@ -17,7 +21,10 @@ function getPods(allNamespaces = false) {
   });
 }
 
-async function execIntoPod(searchTerm, allNamespaces = false) {
+/**
+ * Interactive exec into a pod
+ */
+export async function execIntoPod(searchTerm?: string, allNamespaces: boolean = false): Promise<void> {
   const pods = getPods(allNamespaces);
 
   if (pods.length === 0) {
@@ -25,7 +32,7 @@ async function execIntoPod(searchTerm, allNamespaces = false) {
     return;
   }
 
-  let selectedPod;
+  let selectedPod: Pod | undefined;
 
   if (searchTerm) {
     const podNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
@@ -38,14 +45,14 @@ async function execIntoPod(searchTerm, allNamespaces = false) {
       selectedPod = pods[filtered[0].originalIndex];
     } else {
       const displayNames = filtered.map(f => podNames[f.originalIndex]);
-      const selected = await select({question: 'Select pod:', options: displayNames, autocomplete: true});
+      const selected = await select({ question: 'Select pod:', options: displayNames, autocomplete: true });
       if (!selected) return;
       const selectedIdx = displayNames.indexOf(selected);
       selectedPod = pods[filtered[selectedIdx].originalIndex];
     }
   } else {
     const displayNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
-    const selected = await select({question: 'Select pod to exec into:', options: displayNames, autocomplete: true});
+    const selected = await select({ question: 'Select pod to exec into:', options: displayNames, autocomplete: true });
     if (!selected) return;
     const selectedIdx = displayNames.indexOf(selected);
     selectedPod = pods[selectedIdx];
@@ -58,9 +65,7 @@ async function execIntoPod(searchTerm, allNamespaces = false) {
     stdio: 'inherit'
   });
 
-  child.on('error', (err) => {
+  child.on('error', (err: Error) => {
     console.error('Failed to exec:', err.message);
   });
 }
-
-module.exports = { execIntoPod, getPods };

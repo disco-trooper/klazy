@@ -1,12 +1,13 @@
-// lib/delete.js
-const { spawnSync } = require('node:child_process');
-const { select, input } = require('./cli');
-const { fuzzyFilter } = require('./fuzzy');
-const { getCurrentNamespace } = require('./namespace');
-const { colorize } = require('./colors');
-const { getPods } = require('./exec');
+// src/delete.ts
+import { spawnSync } from 'node:child_process';
+import { select, input } from './cli';
+import { fuzzyFilter } from './fuzzy';
+import { getCurrentNamespace } from './namespace';
+import { colorize } from './colors';
+import { getPods } from './exec';
+import type { Pod } from './types';
 
-async function deletePod(searchTerm, allNamespaces = false, force = false) {
+export async function deletePod(searchTerm?: string, allNamespaces: boolean = false, force: boolean = false): Promise<void> {
   const pods = getPods(allNamespaces);
 
   if (pods.length === 0) {
@@ -14,7 +15,7 @@ async function deletePod(searchTerm, allNamespaces = false, force = false) {
     return;
   }
 
-  let selectedPod;
+  let selectedPod: Pod | undefined;
 
   if (searchTerm) {
     const podNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
@@ -54,5 +55,3 @@ async function deletePod(searchTerm, allNamespaces = false, force = false) {
   console.log(`Deleting pod ${selectedPod.name}...`);
   spawnSync('kubectl', ['delete', 'pod', selectedPod.name, '-n', ns], { stdio: 'inherit' });
 }
-
-module.exports = { deletePod };

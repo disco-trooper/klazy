@@ -1,12 +1,13 @@
-// lib/restart.js
-const { spawnSync } = require('node:child_process');
-const { select } = require('./cli');
-const { fuzzyFilter } = require('./fuzzy');
-const { getCurrentNamespace } = require('./namespace');
-const { colorize } = require('./colors');
-const { getPods } = require('./exec');
+// src/restart.ts
+import { spawnSync } from 'node:child_process';
+import { select } from './cli';
+import { fuzzyFilter } from './fuzzy';
+import { getCurrentNamespace } from './namespace';
+import { colorize } from './colors';
+import { getPods } from './exec';
+import type { Pod } from './types';
 
-async function restartPod(searchTerm, allNamespaces = false) {
+export async function restartPod(searchTerm?: string, allNamespaces: boolean = false): Promise<void> {
   const pods = getPods(allNamespaces);
 
   if (pods.length === 0) {
@@ -14,7 +15,7 @@ async function restartPod(searchTerm, allNamespaces = false) {
     return;
   }
 
-  let selectedPod;
+  let selectedPod: Pod | undefined;
 
   if (searchTerm) {
     const podNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
@@ -51,5 +52,3 @@ async function restartPod(searchTerm, allNamespaces = false) {
     console.log(colorize('Failed to restart pod', 'red'));
   }
 }
-
-module.exports = { restartPod };

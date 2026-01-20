@@ -1,8 +1,8 @@
-// lib/events.js
-const { spawnSync } = require('node:child_process');
-const { colorize } = require('./colors');
+// src/events.ts
+import { spawnSync } from 'node:child_process';
+import { colorize } from './colors';
 
-function colorizeEventType(type) {
+function colorizeEventType(type: string): string {
   switch (type) {
     case 'Normal': return colorize(type, 'green');
     case 'Warning': return colorize(type, 'yellow');
@@ -10,7 +10,7 @@ function colorizeEventType(type) {
   }
 }
 
-async function showEvents(allNamespaces = false, limit = 20) {
+export async function showEvents(allNamespaces: boolean = false, limit: number = 20): Promise<void> {
   const args = ['get', 'events', '--sort-by=.lastTimestamp', '-o', 'jsonpath={range .items[*]}{.type}{"\\t"}{.reason}{"\\t"}{.message}{"\\n"}{end}'];
   if (allNamespaces) args.splice(2, 0, '--all-namespaces');
 
@@ -35,5 +35,3 @@ async function showEvents(allNamespaces = false, limit = 20) {
     console.log(`${coloredType}\t${reason}\t${truncatedMsg || ''}`);
   });
 }
-
-module.exports = { showEvents };

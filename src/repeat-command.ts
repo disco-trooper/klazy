@@ -1,15 +1,13 @@
-const { configuration, lastCommandKey } = require("./config");
-const { spawnSync } = require('node:child_process');
+import { configuration, lastCommandKey } from "./config";
+import { spawnSync } from 'node:child_process';
 
 // Dangerous characters that could indicate command injection
-const DANGEROUS_CHARS = /[;&|`$()]/;
+const DANGEROUS_CHARS: RegExp = /[;&|`$()]/;
 
 /**
  * Validates that a command is safe to execute
- * @param {string} command
- * @returns {boolean}
  */
-const isValidCommand = (command) => {
+const isValidCommand = (command: unknown): command is string => {
     if (!command || typeof command !== 'string') {
         return false;
     }
@@ -26,17 +24,18 @@ const isValidCommand = (command) => {
 
 /**
  * Parses a kubectl command string into args array
- * @param {string} command - Full kubectl command string (e.g., "kubectl get pods -n default")
- * @returns {string[]} - Array of arguments to pass to spawnSync
+ * @param command - Full kubectl command string (e.g., "kubectl get pods -n default")
+ * @returns Array of arguments to pass to spawnSync
  */
-const parseKubectlCommand = (command) => {
+const parseKubectlCommand = (command: string): string[] => {
     // Remove 'kubectl ' prefix and split by whitespace
     const withoutKubectl = command.slice('kubectl '.length);
     return withoutKubectl.split(/\s+/).filter(Boolean);
 };
 
-const repeatCommand = () => {
-    const command = configuration.get()?.[lastCommandKey];
+export const repeatLastCommand = (): void => {
+    const config = configuration.get();
+    const command = config?.[lastCommandKey];
     if (!command) {
         console.log('no command to repeat');
         return;
@@ -55,4 +54,12 @@ const repeatCommand = () => {
     spawnSync('kubectl', args, { stdio: 'inherit' });
 };
 
-module.exports = { repeatCommand };
+export const showLastCommand = (): void => {
+    const config = configuration.get();
+    const command = config?.[lastCommandKey];
+    if (!command) {
+        console.log('no last command stored');
+        return;
+    }
+    console.log(`Last command: ${command}`);
+};

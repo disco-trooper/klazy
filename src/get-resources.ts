@@ -1,11 +1,11 @@
-// lib/get-resources.js
-const { spawnSync } = require('node:child_process');
-const { select } = require('./cli');
-const { configuration, lastCommandKey } = require('./config');
-const { getCurrentNamespace } = require('./namespace');
-const { colorizeStatus } = require('./colors');
+// lib/get-resources.ts
+import { spawnSync } from 'node:child_process';
+import { select } from './cli';
+import { configuration, lastCommandKey } from './config';
+import { getCurrentNamespace } from './namespace';
+import { colorizeStatus } from './colors';
 
-const RESOURCE_ALIASES = {
+const RESOURCE_ALIASES: Record<string, string> = {
   'po': 'pods', 'pod': 'pods', 'pods': 'pods',
   'svc': 'services', 'service': 'services', 'services': 'services',
   'deploy': 'deployments', 'deployment': 'deployments', 'deployments': 'deployments',
@@ -19,14 +19,14 @@ const RESOURCE_ALIASES = {
   'node': 'nodes', 'nodes': 'nodes',
 };
 
-const RESOURCE_OPTIONS = ['pods', 'services', 'deployments', 'statefulsets', 'daemonsets', 'configmaps', 'secrets', 'ingresses'];
+const RESOURCE_OPTIONS: string[] = ['pods', 'services', 'deployments', 'statefulsets', 'daemonsets', 'configmaps', 'secrets', 'ingresses'];
 
-function resolveResourceType(input) {
+function resolveResourceType(input: string): string | null {
   if (!input) return null;
   return RESOURCE_ALIASES[input.toLowerCase()] || null;
 }
 
-function colorizeOutput(output) {
+function colorizeOutput(output: string): string {
   return output.split('\n').map(line => {
     // Colorize status keywords
     return line.replace(/(Running|Pending|Error|CrashLoopBackOff|Completed|Failed|Succeeded|ContainerCreating|ImagePullBackOff|Terminated|Ready|NotReady|True|False)/g,
@@ -34,14 +34,15 @@ function colorizeOutput(output) {
   }).join('\n');
 }
 
-const getResources = async (resourceType, allNamespaces = false) => {
-  let resource;
+export const getResources = async (resourceType: string, allNamespaces: boolean = false): Promise<void> => {
+  let resource: string;
   if (resourceType) {
-    resource = resolveResourceType(resourceType);
-    if (!resource) {
+    const resolved = resolveResourceType(resourceType);
+    if (!resolved) {
       console.log(`Unknown resource type: ${resourceType}`);
       return;
     }
+    resource = resolved;
   } else {
     const selected = await select({question: 'Select resource:', options: RESOURCE_OPTIONS, autocomplete: true});
     if (!selected) return;
@@ -49,7 +50,7 @@ const getResources = async (resourceType, allNamespaces = false) => {
   }
 
   const ns = getCurrentNamespace();
-  const args = ['get', resource];
+  const args: string[] = ['get', resource];
   if (allNamespaces) {
     args.push('--all-namespaces');
   } else {
@@ -71,5 +72,3 @@ const getResources = async (resourceType, allNamespaces = false) => {
     console.error('Failed to get resources');
   }
 };
-
-module.exports = { getResources };
