@@ -1,7 +1,8 @@
 .idea
 *.tgz
 .npmrc
+node_modules/
 TRASH/
 TRASH-FILES.md
+promo/
 lib/
-node_modules/

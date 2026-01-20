@@ -1,5 +1,11 @@
 .idea
 *.tgz
-*.gif
 .npmrc
 .gitignore
+promo/
+docs/
+src/
+tsconfig.json
+TRASH/
+TRASH-FILES.md
+assets/
