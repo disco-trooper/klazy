@@ -6,6 +6,8 @@
 
 Fuzzy kubectl wrapper. No dependencies.
 
+![klazy demo](./assets/demo.gif)
+
 ```bash
 npm install -g klazy
 ```
