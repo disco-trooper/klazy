@@ -28,9 +28,6 @@ export const AnimatedTerminal: React.FC<AnimatedTerminalProps> = ({
     config: { damping: 15, stiffness: 80 },
   });
 
-  // Subtle floating/zoom during content
-  const floatProgress = Math.min(1, Math.max(0, (localFrame - 30) / 60));
-
   // Exit animation
   const isExiting = frame >= exitFrame;
   const exitProgress = isExiting
@@ -49,15 +46,12 @@ export const AnimatedTerminal: React.FC<AnimatedTerminalProps> = ({
   const translateY = interpolate(entranceProgress, [0, 1], [40, 0]); // slide up
   const scale = interpolate(entranceProgress, [0, 1], [0.88, 1]); // grow in
 
-  // Subtle zoom during content
-  const contentZoom = interpolate(floatProgress, [0, 1], [1, 1.015]);
-
   // Exit: fade and slide out
   const exitOpacity = interpolate(exitProgress, [0, 1], [1, 0]);
   const exitScale = interpolate(exitProgress, [0, 1], [1, 0.96]);
   const exitTranslateY = interpolate(exitProgress, [0, 1], [0, -20]);
 
-  const finalScale = scale * contentZoom * exitScale;
+  const finalScale = scale * exitScale;
   const finalTranslateY = translateY + exitTranslateY;
   const opacity = entranceProgress * exitOpacity;
 
