@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { select, input } from './cli';
-import type { Context } from './types';
+import { fuzzyFilter } from './fuzzy';
+import type { Context, Pod } from './types';
 
 const SELECTED_CONTEXT_REGEX = /^\s*\*/;
 
@@ -80,4 +81,44 @@ export function selectPort(question: string): Promise<string> {
         invalidWarning: 'valid ports are numbers in range [0,65535]',
         validationCallback: validatePort,
     });
+}
+
+/**
+ * Interactive pod selection with optional fuzzy search
+ */
+export async function selectPod(
+  pods: Pod[],
+  searchTerm: string | undefined,
+  allNamespaces: boolean,
+  question: string = 'Select pod:'
+): Promise<Pod | undefined> {
+  if (pods.length === 0) {
+    console.log('No pods found');
+    return undefined;
+  }
+
+  const podNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
+
+  if (searchTerm) {
+    const filtered = fuzzyFilter(podNames, searchTerm);
+    if (filtered.length === 0) {
+      console.log(`No pods matching "${searchTerm}"`);
+      return undefined;
+    }
+    if (filtered.length === 1) {
+      return pods[filtered[0].originalIndex];
+    }
+    const displayNames = filtered.map(f => podNames[f.originalIndex]);
+    const selected = await select({ question, options: displayNames, autocomplete: true });
+    if (!selected) return undefined;
+    const idx = displayNames.indexOf(selected);
+    if (idx === -1) return undefined;
+    return pods[filtered[idx].originalIndex];
+  }
+
+  const selected = await select({ question, options: podNames, autocomplete: true });
+  if (!selected) return undefined;
+  const idx = podNames.indexOf(selected);
+  if (idx === -1) return undefined;
+  return pods[idx];
 }
