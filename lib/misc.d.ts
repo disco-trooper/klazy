@@ -1,4 +1,4 @@
-import type { Context } from './types';
+import type { Context, Pod } from './types';
 /**
  * Get all kubectl contexts
  */
@@ -23,3 +23,7 @@ export declare function validatePort(value: string): boolean;
  * Interactive port selection with validation
  */
 export declare function selectPort(question: string): Promise<string>;
+/**
+ * Interactive pod selection with optional fuzzy search
+ */
+export declare function selectPod(pods: Pod[], searchTerm: string | undefined, allNamespaces: boolean, question?: string): Promise<Pod | undefined>;

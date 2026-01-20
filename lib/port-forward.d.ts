@@ -1,3 +1,3 @@
-import type { Service } from './types';
+import type { Service, ResourceType } from './types';
 export declare function getServices(allNamespaces?: boolean): Service[];
-export declare function portForward(resourceType: string, allNamespaces?: boolean): Promise<void>;
+export declare function portForward(resourceType: ResourceType, allNamespaces?: boolean): Promise<void>;
