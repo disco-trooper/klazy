@@ -23,6 +23,9 @@ npm install -g klazy
 | `klazy get`         | List resources           |
 | `klazy get deploy`  | List deployments         |
 | `klazy get svc -a`  | Services, all namespaces |
+| `klazy get pvc`     | Persistent volume claims |
+| `klazy get ns`      | List namespaces          |
+| `klazy get nodes`   | List nodes               |
 | `klazy exec`        | Exec into pod            |
 | `klazy exec <name>` | Exec (fuzzy match)       |
 | `klazy desc`        | Describe pod             |
