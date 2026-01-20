@@ -34,9 +34,10 @@ export function getConfig(): KlazyConfig {
     let rawContent: string;
     try {
         rawContent = fs.readFileSync(configPath, 'utf8');
-    } catch {
-        logError('read config file', configPath);
-        return {};
+    } catch (error) {
+        const msg = error instanceof Error ? error.message : 'unknown error';
+        logError('read config file', `${configPath}: ${msg}`);
+        return { ...defaultConfig };
     }
     try {
         const parsed = JSON.parse(rawContent);
@@ -45,17 +46,19 @@ export function getConfig(): KlazyConfig {
           return { ...defaultConfig };
         }
         return parsed;
-    } catch {
-        logError('parse config file', configPath);
-        return {};
+    } catch (error) {
+        const msg = error instanceof Error ? error.message : 'unknown error';
+        logError('parse config file', `${configPath}: ${msg}`);
+        return { ...defaultConfig };
     }
 }
 
 export function writeConfig(config: KlazyConfig): void {
     try {
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2), { mode: 0o600 });
-    } catch {
-        logError('write config file', configPath);
+    } catch (error) {
+        const msg = error instanceof Error ? error.message : 'unknown error';
+        logError('write config file', `${configPath}: ${msg}`);
     }
 }
 
