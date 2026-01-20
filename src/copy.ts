@@ -10,12 +10,26 @@ import { selectPod } from './misc';
 import type { Pod } from './types';
 
 /**
- * Validates local path doesn't escape via traversal
+ * Validates local path is within cwd or is an explicit absolute path
+ * that doesn't target sensitive system directories
  */
 function isPathSafe(localPath: string): boolean {
   const resolved = path.resolve(localPath);
   const cwd = process.cwd();
-  return resolved.startsWith(cwd) || path.isAbsolute(localPath);
+
+  // Allow paths within current working directory
+  if (resolved.startsWith(cwd + path.sep) || resolved === cwd) {
+    return true;
+  }
+
+  // Allow absolute paths but block sensitive directories
+  if (path.isAbsolute(localPath)) {
+    const sensitiveRoots = ['/etc', '/var', '/usr', '/bin', '/sbin', '/root', '/sys', '/proc'];
+    const blocked = sensitiveRoots.some(root => resolved.startsWith(root));
+    return !blocked;
+  }
+
+  return false;
 }
 
 export async function copyFiles(srcArg: string | undefined, destArg: string | undefined, allNamespaces: boolean = false): Promise<void> {
@@ -72,6 +86,12 @@ export async function copyFiles(srcArg: string | undefined, destArg: string | un
     const selectedPod = pods[filtered[0].originalIndex];
     const ns = selectedPod.namespace || getCurrentNamespace();
 
+    // Validate destination path
+    if (!isPathSafe(dest)) {
+      console.log(colorize('Error: Destination path outside allowed directories', 'red'));
+      return;
+    }
+
     spawnSync('kubectl', ['cp', `${ns}/${selectedPod.name}:${pathPart}`, dest], { stdio: 'inherit' });
     console.log(colorize('Copy completed', 'green'));
   } else if (dest.includes(':')) {
@@ -88,6 +108,12 @@ export async function copyFiles(srcArg: string | undefined, destArg: string | un
 
     const selectedPod = pods[filtered[0].originalIndex];
     const ns = selectedPod.namespace || getCurrentNamespace();
+
+    // Validate source path
+    if (!isPathSafe(src)) {
+      console.log(colorize('Error: Source path outside allowed directories', 'red'));
+      return;
+    }
 
     spawnSync('kubectl', ['cp', src, `${ns}/${selectedPod.name}:${pathPart}`], { stdio: 'inherit' });
     console.log(colorize('Copy completed', 'green'));
