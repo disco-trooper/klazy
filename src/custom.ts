@@ -17,7 +17,7 @@ export const isValidCustomCommand = (cmd: unknown): cmd is CustomCommand => {
         (typeof description === 'string' || (Array.isArray(description) && description.every(el => typeof el === 'string')));
 };
 
-const isCustomConfigValid = ((): boolean => {
+export const isCustomConfigValid = ((): boolean => {
     const config = configuration.get();
     const commands = config?.[customCommandsKey];
     if (!commands) {
