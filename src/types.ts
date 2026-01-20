@@ -12,6 +12,17 @@ export interface Service {
 
 export type ResourceType = 'pod' | 'service';
 
+// Extended type for get-resources command
+export type GetResourceType =
+  | 'pods' | 'po' | 'pod'
+  | 'services' | 'svc' | 'service'
+  | 'deployments' | 'deploy' | 'deployment'
+  | 'statefulsets' | 'sts' | 'statefulset'
+  | 'daemonsets' | 'ds' | 'daemonset'
+  | 'configmaps' | 'cm' | 'configmap'
+  | 'secrets' | 'secret'
+  | 'ingresses' | 'ing' | 'ingress';
+
 export interface Context {
   name: string;
   current: boolean;
