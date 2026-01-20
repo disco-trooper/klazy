@@ -40,7 +40,11 @@ export async function useContext(targetContext?: string): Promise<void> {
     config.previousContext = currentContext;
     writeConfig(config);
 
-    spawnSync('kubectl', ['config', 'use-context', newContext], { stdio: 'inherit' });
+    const result = spawnSync('kubectl', ['config', 'use-context', newContext], { encoding: 'utf8' });
+    if (result.status !== 0) {
+        console.log(`Failed to switch context: ${result.stderr?.trim() || 'unknown error'}`);
+        return;
+    }
     console.log(`Switched to context: ${colorize(newContext, 'cyan')}`);
 }
 
