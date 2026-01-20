@@ -83,9 +83,9 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
 
         const autocompleteCompliantIndices: number[] = getAutocompleteCompliantIndices();
         visibleOptionsIndices = autocompleteCompliantIndices.slice(0, CHOICES_ON_SCREEN);
-        currentPointer = visibleOptionsIndices[0];
 
         if (visibleOptionsIndices.length) {
+            currentPointer = visibleOptionsIndices[0];
             invalidSelection = false;
         } else {
             currentPointer = -1;
@@ -117,12 +117,9 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
                 }
                 break;
             case DELETE:
+                // DELETE removes character at cursor position, cursor stays in place
                 if (autoCompleteStringPointer !== autocompleteString.length) {
                     autocompleteString = autocompleteString.substring(0, autoCompleteStringPointer) + autocompleteString.substring(autoCompleteStringPointer + 1);
-                    autoCompleteStringPointer--;
-                    if (autoCompleteStringPointer < 0) {
-                        autoCompleteStringPointer = 0;
-                    }
                     doAutoComplete();
                 }
                 break;
@@ -174,7 +171,11 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
                     // simple shift by one up
                     visibleOptionsIndices.pop();
                     const boundaryIndex: number = autocompleteCompliantIndices.findIndex(i => i === visibleOptionsIndices[0]);
-                    visibleOptionsIndices.unshift(autocompleteCompliantIndices[boundaryIndex - 1]);
+                    if (boundaryIndex === -1 || boundaryIndex === 0) {
+                        visibleOptionsIndices.unshift(autocompleteCompliantIndices[autocompleteCompliantIndices.length - 1]);
+                    } else {
+                        visibleOptionsIndices.unshift(autocompleteCompliantIndices[boundaryIndex - 1]);
+                    }
                     currentPointer = visibleOptionsIndices[0];
                 }
             } else {
@@ -228,7 +229,11 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
                     // simple shift by one down
                     visibleOptionsIndices.shift();
                     const boundaryIndex: number = autocompleteCompliantIndices.findIndex(i => i === visibleOptionsIndices[visibleOptionsIndices.length - 1]);
-                    visibleOptionsIndices.push(autocompleteCompliantIndices[boundaryIndex + 1]);
+                    if (boundaryIndex === -1 || boundaryIndex >= autocompleteCompliantIndices.length - 1) {
+                        visibleOptionsIndices.push(autocompleteCompliantIndices[0]);
+                    } else {
+                        visibleOptionsIndices.push(autocompleteCompliantIndices[boundaryIndex + 1]);
+                    }
                     currentPointer = visibleOptionsIndices[visibleOptionsIndices.length - 1];
                 }
             } else {
