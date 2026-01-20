@@ -7,9 +7,12 @@ import { logError } from './colors';
 function isValidKlazyConfig(obj: unknown): obj is KlazyConfig {
   if (!obj || typeof obj !== 'object') return false;
   const config = obj as Record<string, unknown>;
-  if (config.previousNamespace !== undefined && typeof config.previousNamespace !== 'string') return false;
-  if (config.previousContext !== undefined && typeof config.previousContext !== 'string') return false;
-  if (config.lastCommand !== undefined && typeof config.lastCommand !== 'string') return false;
+  // Accept undefined, null, or string for optional string fields
+  const isOptionalString = (val: unknown): boolean =>
+    val === undefined || val === null || typeof val === 'string';
+  if (!isOptionalString(config.previousNamespace)) return false;
+  if (!isOptionalString(config.previousContext)) return false;
+  if (!isOptionalString(config.lastCommand)) return false;
   return true;
 }
 
