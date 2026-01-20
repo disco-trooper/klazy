@@ -2,11 +2,11 @@
 
 [![npm version](https://img.shields.io/npm/v/klazy)](https://www.npmjs.com/package/klazy)
 [![npm downloads](https://img.shields.io/npm/dm/klazy)](https://www.npmjs.com/package/klazy)
-[![license](https://img.shields.io/npm/l/klazy)](https://github.com/discotrooper/klazy/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/klazy)](https://github.com/disco-trooper/klazy/blob/main/LICENSE)
 
 Fuzzy kubectl wrapper. No dependencies.
 
-![klazy demo](https://raw.githubusercontent.com/discotrooper/klazy/main/assets/demo.gif)
+![klazy demo](https://raw.githubusercontent.com/disco-trooper/klazy/main/assets/demo.gif)
 
 ```bash
 npm install -g klazy
