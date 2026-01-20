@@ -26,7 +26,8 @@ function getServicePods(serviceName: string, namespace: string): string[] {
 
     if (podsResult.status !== 0) return [];
     return podsResult.stdout.trim().split(/\s+/).filter(Boolean);
-  } catch {
+  } catch (err) {
+    console.error('Failed to parse service selector:', err instanceof Error ? err.message : 'unknown error');
     return [];
   }
 }
