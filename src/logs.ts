@@ -8,15 +8,19 @@ import { selectService, selectPod } from './misc';
 import type { ResourceType } from './types';
 
 function getServicePods(serviceName: string, namespace: string): string[] {
+  // Get service as full JSON to avoid quote issues with jsonpath
   const selectorResult = spawnSync('kubectl', [
     'get', 'service', serviceName, '-n', namespace,
-    '-o', 'jsonpath={.spec.selector}'
+    '-o', 'json'
   ], { encoding: 'utf8' });
 
   if (selectorResult.status !== 0) return [];
 
   try {
-    const selector = JSON.parse(selectorResult.stdout.replace(/'/g, '"')) as Record<string, string>;
+    const service = JSON.parse(selectorResult.stdout) as { spec?: { selector?: Record<string, string> } };
+    const selector = service.spec?.selector;
+    if (!selector || Object.keys(selector).length === 0) return [];
+
     const labelSelector = Object.entries(selector).map(([k, v]) => `${k}=${v}`).join(',');
 
     const podsResult = spawnSync('kubectl', [
@@ -27,7 +31,7 @@ function getServicePods(serviceName: string, namespace: string): string[] {
     if (podsResult.status !== 0) return [];
     return podsResult.stdout.trim().split(/\s+/).filter(Boolean);
   } catch (err) {
-    console.error('Failed to parse service selector:', err instanceof Error ? err.message : 'unknown error');
+    console.error('Failed to parse service:', err instanceof Error ? err.message : 'unknown error');
     return [];
   }
 }
