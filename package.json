@@ -10,6 +10,7 @@
     "url": "https://github.com/discotrooper/klazy.git"
   },
   "bin": {
+    "kl": "./lib/index.js",
     "klazy": "./lib/index.js"
   },
   "type": "commonjs",

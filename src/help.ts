@@ -61,7 +61,7 @@ const optionMap: Record<string, OptionDescription> = {
 const validArgs: string[] = Object.keys(optionMap);
 
 const printHelp = (): void => {
-    console.log('klazy (lazy kubectl) is a command line (semi)interactive tool for easier usage of some kubectl commands');
+    console.log('kl/klazy - fuzzy kubectl wrapper for easier usage of common kubectl commands');
     console.group('options:');
     validArgs.forEach(option => {
         const description = optionMap[option];

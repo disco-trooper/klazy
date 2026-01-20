@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0] - 2026-01-20
 
 ### Added
+- Short alias `kl` (use as `kl` or `klazy`)
 - TypeScript rewrite with full type safety
 - Extended `get` command support: `pvc`, `ns`, `nodes`
 - Fuzzy search for pod/service selection

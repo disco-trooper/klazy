@@ -10,6 +10,8 @@ Fuzzy kubectl wrapper. No dependencies.
 npm install -g klazy
 ```
 
+Use as `kl` or `klazy`.
+
 ## Commands
 
 | Command             | Description              |
