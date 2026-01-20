@@ -5,7 +5,7 @@ import { fuzzyFilter } from './fuzzy';
 import { getCurrentNamespace } from './namespace';
 import { getPods } from './exec';
 import { getServices } from './port-forward';
-import type { Pod, Service, FuzzyResult } from './types';
+import type { Pod, Service, FuzzyResult, ResourceType } from './types';
 
 function getServicePods(serviceName: string, namespace: string): string[] {
   const selectorResult = spawnSync('kubectl', [
@@ -31,7 +31,7 @@ function getServicePods(serviceName: string, namespace: string): string[] {
   }
 }
 
-export async function streamLogs(resourceType: string, searchTerm: string | undefined, allNamespaces: boolean = false, follow: boolean = true): Promise<void> {
+export async function streamLogs(resourceType: ResourceType, searchTerm: string | undefined, allNamespaces: boolean = false, follow: boolean = true): Promise<void> {
   let podName: string;
   let namespace: string;
 

@@ -7,7 +7,7 @@ import { colorize } from './colors';
 import { fuzzyFilter } from './fuzzy';
 import { getPods } from './exec';
 import { selectPort, validatePort } from './misc';
-import type { Pod, Service } from './types';
+import type { Pod, Service, ResourceType } from './types';
 
 export function getServices(allNamespaces: boolean = false): Service[] {
   const args = ['get', 'services', '-o', 'jsonpath={range .items[*]}{.metadata.name}{"\\t"}{.metadata.namespace}{"\\n"}{end}'];
@@ -22,7 +22,7 @@ export function getServices(allNamespaces: boolean = false): Service[] {
   });
 }
 
-export async function portForward(resourceType: string, allNamespaces: boolean = false): Promise<void> {
+export async function portForward(resourceType: ResourceType, allNamespaces: boolean = false): Promise<void> {
   let resourceName: string;
   let localPort: string;
   let remotePort: string;

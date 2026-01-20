@@ -10,6 +10,8 @@ export interface Service {
   namespace: string;
 }
 
+export type ResourceType = 'pod' | 'service';
+
 export interface Context {
   name: string;
   current: boolean;
