@@ -1,38 +1,39 @@
-const path = require('node:path')
-const fs = require('node:fs')
-const os = require('node:os')
+import * as path from 'node:path';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import type { KlazyConfig } from './types';
 
-const configPath = path.join(os.homedir(), '.klazy')
+const configPath: string = path.join(os.homedir(), '.klazy');
 
-const lastCommandKey = 'lastCommand'
-const customCommandsKey = 'custom'
+export const lastCommandKey = 'lastCommand';
+export const customCommandsKey = 'custom';
 
-const defaultConfig = {
-    previousNamespace: null,
-    previousContext: null,
+const defaultConfig: KlazyConfig = {
+    previousNamespace: undefined,
+    previousContext: undefined,
 };
 
-const getConfig = () => {
+export function getConfig(): KlazyConfig {
     const exist = fs.existsSync(configPath);
     if (!exist) {
-        return { ...defaultConfig }
+        return { ...defaultConfig };
     }
-    let rawContent
+    let rawContent: string;
     try {
         rawContent = fs.readFileSync(configPath, 'utf8');
     } catch {
         console.log('cannot read config file', configPath);
-        return {}
+        return {};
     }
     try {
-        return JSON.parse(rawContent);
+        return JSON.parse(rawContent) as KlazyConfig;
     } catch {
         console.log('corrupted config file', configPath);
-        return {}
+        return {};
     }
 }
 
-const writeConfig = (config) => {
+export function writeConfig(config: KlazyConfig): void {
     try {
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     } catch {
@@ -40,15 +41,14 @@ const writeConfig = (config) => {
     }
 }
 
-let config = getConfig();
-const configuration = {
-    get: () => config,
-    put: (update) => {
+let config: KlazyConfig = getConfig();
+
+export const configuration = {
+    get: (): KlazyConfig => config,
+    put: (update: Partial<KlazyConfig>): void => {
         const currentConfig = getConfig();
-        const mergedConfig = {...currentConfig, ...update}
+        const mergedConfig: KlazyConfig = { ...currentConfig, ...update };
         writeConfig(mergedConfig);
         config = getConfig();
-    }
-}
-
-module.exports = {configuration, lastCommandKey, customCommandsKey, getConfig, writeConfig};
+    },
+};

@@ -1,10 +1,12 @@
+import type { FuzzyResult } from './types';
+
 /**
  * Fuzzy match pattern against text
- * @param {string} pattern - search pattern
- * @param {string} text - text to match against
- * @returns {number} - score (0 = no match, higher = better match)
+ * @param pattern - search pattern
+ * @param text - text to match against
+ * @returns score (0 = no match, higher = better match)
  */
-function fuzzyMatch(pattern, text) {
+export function fuzzyMatch(pattern: string, text: string): number {
     if (!pattern) return 1;
 
     pattern = pattern.toLowerCase();
@@ -31,11 +33,11 @@ function fuzzyMatch(pattern, text) {
 
 /**
  * Filter and sort items by fuzzy match score
- * @param {Array<string>} items - items to filter
- * @param {string} pattern - search pattern
- * @returns {Array<{item: string, originalIndex: number}>} - filtered items with original indices
+ * @param items - items to filter
+ * @param pattern - search pattern
+ * @returns filtered items with original indices
  */
-function fuzzyFilter(items, pattern) {
+export function fuzzyFilter(items: string[], pattern: string): FuzzyResult[] {
     if (!pattern) {
         return items.map((item, i) => ({ item, originalIndex: i }));
     }
@@ -46,5 +48,3 @@ function fuzzyFilter(items, pattern) {
         .sort((a, b) => b.score - a.score)
         .map(({ item, originalIndex }) => ({ item, originalIndex }));
 }
-
-module.exports = { fuzzyMatch, fuzzyFilter };
