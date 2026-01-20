@@ -2,6 +2,10 @@
 import { spawnSync } from 'node:child_process';
 import { colorize } from './colors';
 
+const DEFAULT_EVENT_LIMIT = 20;
+const MAX_MESSAGE_LENGTH = 60;
+const TRUNCATE_LENGTH = 57;
+
 function colorizeEventType(type: string): string {
   switch (type) {
     case 'Normal': return colorize(type, 'green');
@@ -10,7 +14,7 @@ function colorizeEventType(type: string): string {
   }
 }
 
-export async function showEvents(allNamespaces: boolean = false, limit: number = 20): Promise<void> {
+export async function showEvents(allNamespaces: boolean = false, limit: number = DEFAULT_EVENT_LIMIT): Promise<void> {
   const args = ['get', 'events', '--sort-by=.lastTimestamp', '-o', 'jsonpath={range .items[*]}{.type}{"\\t"}{.reason}{"\\t"}{.message}{"\\n"}{end}'];
   if (allNamespaces) args.splice(2, 0, '--all-namespaces');
 
@@ -31,7 +35,7 @@ export async function showEvents(allNamespaces: boolean = false, limit: number =
   lines.forEach(line => {
     const [type, reason, message] = line.split('\t');
     const coloredType = colorizeEventType(type);
-    const truncatedMsg = message && message.length > 60 ? message.substring(0, 57) + '...' : message;
+    const truncatedMsg = message && message.length > MAX_MESSAGE_LENGTH ? message.substring(0, TRUNCATE_LENGTH) + '...' : message;
     console.log(`${coloredType}\t${reason}\t${truncatedMsg || ''}`);
   });
 }

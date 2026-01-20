@@ -2,6 +2,8 @@ import { configuration, customCommandsKey } from "./config";
 import { isCustomConfigValid } from "./custom";
 import type { CustomCommand } from './types';
 
+const HELP_PAD_WIDTH = 18;
+
 type OptionDescription = string | string[];
 
 const optionMap: Record<string, OptionDescription> = {
@@ -80,7 +82,7 @@ const printCustomCommands = (): void => {
 }
 
 const printOne = (commandName: string, description: OptionDescription): void => {
-    const padWidth = 18;
+    const padWidth = HELP_PAD_WIDTH;
     if (Array.isArray(description)) {
         description.forEach((item, i) => {
             if (i === 0) {
