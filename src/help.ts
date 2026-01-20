@@ -1,10 +1,6 @@
 import { configuration, customCommandsKey } from "./config";
 import { isCustomConfigValid } from "./custom";
-
-interface CustomCommand {
-    name: string;
-    description: string;
-}
+import type { CustomCommand } from './types';
 
 type OptionDescription = string | string[];
 
