@@ -1,21 +1,32 @@
 #!/usr/bin/env node
 
-const {useContext, showCurrentContext, showAllContexts} = require('./context');
-const {printHelp} = require('./help');
-const {portForward} = require('./port-forward');
-const {getResources} = require('./get-resources');
-const {repeatCommand} = require("./repeat-command");
-const {isCustomCommand, runCustomCommand} = require("./custom");
-const {streamLogs} = require('./logs');
+import { useContext, showCurrentContext, showAllContexts } from './context';
+import { printHelp } from './help';
+import { portForward } from './port-forward';
+import { getResources } from './get-resources';
+import { repeatLastCommand } from './repeat-command';
+import { isCustomCommand, runCustomCommand } from './custom';
+import { streamLogs } from './logs';
+import { useNamespace } from './namespace';
+import { execIntoPod } from './exec';
+import { describePod } from './describe';
+import { showEnv } from './env';
+import { showEvents } from './events';
+import { restartPod } from './restart';
+import { copyFiles } from './copy';
+import { deletePod } from './delete';
+import { showMetrics } from './metrics';
+import { outputCompletion } from './completion';
+import type { Flags } from './types';
 
-const main = async () => {
-    const args = process.argv.slice(2);
-    const flags = {
+const main = async (): Promise<void> => {
+    const args: string[] = process.argv.slice(2);
+    const flags: Flags = {
         allNamespaces: args.includes('-a') || args.includes('--all-namespaces'),
         force: args.includes('-f') || args.includes('--force'),
         noFollow: args.includes('--no-follow'),
     };
-    const cmd = args.find(a => !a.startsWith('-'));
+    const cmd: string | undefined = args.find((a: string) => !a.startsWith('-'));
 
     if (!cmd) {
         printHelp();
@@ -24,7 +35,7 @@ const main = async () => {
 
     switch (cmd) {
         case 'c':
-            const ctxArg = args.find((a, i) => i > args.indexOf('c') && (!a.startsWith('-') || a === '-'));
+            const ctxArg: string | undefined = args.find((a: string, i: number) => i > args.indexOf('c') && (!a.startsWith('-') || a === '-'));
             await useContext(ctxArg);
             break;
         case 'cs':
@@ -37,87 +48,77 @@ const main = async () => {
             await portForward('pod', flags.allNamespaces);
             break;
         case 'get':
-            const resourceType = args.find((a, i) => i > args.indexOf('get') && !a.startsWith('-'));
+            const resourceType: string = args.find((a: string, i: number) => i > args.indexOf('get') && !a.startsWith('-')) || 'pods';
             await getResources(resourceType, flags.allNamespaces);
             break;
         case 'pfs':
             await portForward('service', flags.allNamespaces);
             break;
         case 'logs':
-            const logsSearch = args.find((a, i) => i > args.indexOf('logs') && !a.startsWith('-'));
+            const logsSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('logs') && !a.startsWith('-'));
             await streamLogs('pod', logsSearch, flags.allNamespaces, !flags.noFollow);
             break;
         case 'logss':
-            const logssSearch = args.find((a, i) => i > args.indexOf('logss') && !a.startsWith('-'));
+            const logssSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('logss') && !a.startsWith('-'));
             await streamLogs('service', logssSearch, flags.allNamespaces, !flags.noFollow);
             break;
         case 'ns':
-            const { useNamespace } = require('./namespace');
-            const nsArg = args.find((a, i) => i > args.indexOf('ns') && (!a.startsWith('-') || a === '-'));
+            const nsArg: string | undefined = args.find((a: string, i: number) => i > args.indexOf('ns') && (!a.startsWith('-') || a === '-'));
             await useNamespace(nsArg);
             break;
         case 'exec':
-            const { execIntoPod } = require('./exec');
-            const execSearch = args.find((a, i) => i > args.indexOf('exec') && !a.startsWith('-'));
+            const execSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('exec') && !a.startsWith('-'));
             await execIntoPod(execSearch, flags.allNamespaces);
             break;
         case 'desc':
-            const { describePod } = require('./describe');
-            const descSearch = args.find((a, i) => i > args.indexOf('desc') && !a.startsWith('-'));
+            const descSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('desc') && !a.startsWith('-'));
             await describePod(descSearch, flags.allNamespaces);
             break;
         case 'env':
-            const { showEnv } = require('./env');
-            const envSearch = args.find((a, i) => i > args.indexOf('env') && !a.startsWith('-'));
+            const envSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('env') && !a.startsWith('-'));
             await showEnv(envSearch, flags.allNamespaces);
             break;
         case 'events':
         case 'ev':
-            const { showEvents } = require('./events');
             await showEvents(flags.allNamespaces);
             break;
         case 'restart':
-            const { restartPod } = require('./restart');
-            const restartSearch = args.find((a, i) => i > args.indexOf('restart') && !a.startsWith('-'));
+            const restartSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('restart') && !a.startsWith('-'));
             await restartPod(restartSearch, flags.allNamespaces);
             break;
         case 'cp':
         case 'copy':
-            const { copyFiles } = require('./copy');
-            const copyArgs = args.filter((a, i) => i > args.indexOf(cmd) && !a.startsWith('-'));
+            const copyArgs: string[] = args.filter((a: string, i: number) => i > args.indexOf(cmd) && !a.startsWith('-'));
             await copyFiles(copyArgs[0], copyArgs[1], flags.allNamespaces);
             break;
         case 'del':
         case 'delete':
-            const { deletePod } = require('./delete');
-            const delSearch = args.find((a, i) => i > args.indexOf(cmd) && !a.startsWith('-'));
+            const delSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf(cmd) && !a.startsWith('-'));
             await deletePod(delSearch, flags.allNamespaces, flags.force);
             break;
         case 'r':
-            await repeatCommand();
+            repeatLastCommand();
             break;
         case 'top':
         case 'metrics':
-            const { showMetrics } = require('./metrics');
-            const metricsType = args.find((a, i) => i > args.indexOf(cmd) && !a.startsWith('-')) || 'pods';
+            const metricsType: string = args.find((a: string, i: number) => i > args.indexOf(cmd) && !a.startsWith('-')) || 'pods';
             await showMetrics(metricsType, flags.allNamespaces);
             break;
         case 'completion':
-            const { outputCompletion } = require('./completion');
-            const shell = args.find((a, i) => i > args.indexOf('completion') && !a.startsWith('-'));
+            const shell: string = args.find((a: string, i: number) => i > args.indexOf('completion') && !a.startsWith('-')) || '';
             outputCompletion(shell);
             break;
         case 'h':
             printHelp();
             break;
         default:
-            if(isCustomCommand(cmd)) {
-                await runCustomCommand(cmd)
-                return
+            if (isCustomCommand(cmd)) {
+                await runCustomCommand(cmd);
+                return;
             }
             console.log('unsupported command line argument:', cmd);
             printHelp();
     }
 };
 
-main().catch((e) => console.log(e));
+main().catch((e: unknown) => console.log(e));
