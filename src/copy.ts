@@ -6,6 +6,7 @@ import { fuzzyFilter } from './fuzzy';
 import { getCurrentNamespace } from './namespace';
 import { colorize } from './colors';
 import { getPods } from './exec';
+import { selectPod } from './misc';
 import type { Pod } from './types';
 
 /**
@@ -26,12 +27,8 @@ export async function copyFiles(srcArg: string | undefined, destArg: string | un
 
   // Interactive mode if no args
   if (!srcArg) {
-    const displayNames = pods.map(p => allNamespaces ? `${p.namespace}/${p.name}` : p.name);
-    const selected = await select({question: 'Select pod:', options: displayNames, autocomplete: true});
-    if (!selected) return;
-    const idx = displayNames.indexOf(selected);
-    if (idx === -1) return;
-    const selectedPod = pods[idx];
+    const selectedPod = await selectPod(pods, undefined, allNamespaces, 'Select pod:');
+    if (!selectedPod) return;
     const ns = selectedPod.namespace || getCurrentNamespace();
 
     const directions = ['From pod to local', 'From local to pod'];
