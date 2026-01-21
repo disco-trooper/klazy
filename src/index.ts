@@ -65,11 +65,21 @@ const main = async (): Promise<void> => {
             break;
         case 'logs':
             const logsSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('logs') && !a.startsWith('-') && args[i - 1] !== '--pipe');
-            await streamLogs('pod', logsSearch, flags.allNamespaces, !flags.noFollow, flags.pick, flags.pipe);
+            await streamLogs('pod', logsSearch, {
+                allNamespaces: flags.allNamespaces,
+                follow: !flags.noFollow,
+                pick: flags.pick,
+                pipeCmd: flags.pipe,
+            });
             break;
         case 'logss':
             const logssSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('logss') && !a.startsWith('-') && args[i - 1] !== '--pipe');
-            await streamLogs('service', logssSearch, flags.allNamespaces, !flags.noFollow, flags.pick, flags.pipe);
+            await streamLogs('service', logssSearch, {
+                allNamespaces: flags.allNamespaces,
+                follow: !flags.noFollow,
+                pick: flags.pick,
+                pipeCmd: flags.pipe,
+            });
             break;
         case 'ns':
             const nsArg: string | undefined = args.find((a: string, i: number) => i > args.indexOf('ns') && (!a.startsWith('-') || a === '-'));

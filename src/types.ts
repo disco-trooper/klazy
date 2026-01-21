@@ -73,3 +73,10 @@ export interface Flags {
   pick: boolean;
   pipe?: string;
 }
+
+export interface StreamLogsOptions {
+  allNamespaces?: boolean;
+  follow?: boolean;
+  pick?: boolean;
+  pipeCmd?: string;
+}
