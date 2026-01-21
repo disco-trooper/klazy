@@ -1,6 +1,6 @@
 {
   "name": "klazy",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "klazy - lazy kubectl wrapper with fuzzy search",
   "main": "lib/index.js",
   "license": "MIT",
