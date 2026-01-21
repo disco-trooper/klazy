@@ -71,4 +71,5 @@ export interface Flags {
   force: boolean;
   noFollow: boolean;
   pick: boolean;
+  pipe?: string;
 }
