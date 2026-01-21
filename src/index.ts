@@ -19,6 +19,13 @@ import { showMetrics } from './metrics';
 import { outputCompletion } from './completion';
 import type { Flags } from './types';
 
+function extractFlagValue(args: string[], flag: string): string | undefined {
+    const idx = args.indexOf(flag);
+    if (idx === -1 || idx + 1 >= args.length) return undefined;
+    const value = args[idx + 1];
+    return value.startsWith('-') ? undefined : value;
+}
+
 const main = async (): Promise<void> => {
     const args: string[] = process.argv.slice(2);
     const flags: Flags = {
@@ -26,6 +33,7 @@ const main = async (): Promise<void> => {
         force: args.includes('-f') || args.includes('--force'),
         noFollow: args.includes('--no-follow'),
         pick: args.includes('-p') || args.includes('--pick'),
+        pipe: extractFlagValue(args, '--pipe'),
     };
     const cmd: string | undefined = args.find((a: string) => !a.startsWith('-'));
 
@@ -56,12 +64,12 @@ const main = async (): Promise<void> => {
             await portForward('service', flags.allNamespaces, flags.pick);
             break;
         case 'logs':
-            const logsSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('logs') && !a.startsWith('-'));
-            await streamLogs('pod', logsSearch, flags.allNamespaces, !flags.noFollow, flags.pick);
+            const logsSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('logs') && !a.startsWith('-') && args[i - 1] !== '--pipe');
+            await streamLogs('pod', logsSearch, flags.allNamespaces, !flags.noFollow, flags.pick, flags.pipe);
             break;
         case 'logss':
-            const logssSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('logss') && !a.startsWith('-'));
-            await streamLogs('service', logssSearch, flags.allNamespaces, !flags.noFollow, flags.pick);
+            const logssSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('logss') && !a.startsWith('-') && args[i - 1] !== '--pipe');
+            await streamLogs('service', logssSearch, flags.allNamespaces, !flags.noFollow, flags.pick, flags.pipe);
             break;
         case 'ns':
             const nsArg: string | undefined = args.find((a: string, i: number) => i > args.indexOf('ns') && (!a.startsWith('-') || a === '-'));
