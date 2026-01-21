@@ -1,7 +1,7 @@
 // lib/exec.ts
 import { spawnSync, spawn } from 'node:child_process';
 import { getCurrentNamespace } from './namespace';
-import { selectPod } from './misc';
+import { selectPod, selectContext, selectNamespace, selectResource } from './misc';
 import type { Pod } from './types';
 
 /**
@@ -23,16 +23,34 @@ export function getPods(allNamespaces: boolean = false): Pod[] {
 /**
  * Interactive exec into a pod
  */
-export async function execIntoPod(searchTerm?: string, allNamespaces: boolean = false): Promise<void> {
-  const pods = getPods(allNamespaces);
+export async function execIntoPod(searchTerm?: string, allNamespaces: boolean = false, pick: boolean = false): Promise<void> {
+  let podName: string;
+  let ns: string;
+  let context: string | undefined;
 
-  const selectedPod = await selectPod(pods, searchTerm, allNamespaces, 'Select pod to exec into:');
-  if (!selectedPod) return;
+  if (pick) {
+    // laku-style flow: context -> namespace -> pod
+    context = await selectContext();
+    if (!context) return;
 
-  const ns = selectedPod.namespace || getCurrentNamespace();
-  console.log(`Executing into ${selectedPod.name}...`);
+    ns = await selectNamespace(context);
+    if (!ns) return;
 
-  const child = spawn('kubectl', ['exec', '-it', '-n', ns, selectedPod.name, '--', '/bin/sh'], {
+    podName = await selectResource('pod', context, ns);
+    if (!podName) return;
+  } else {
+    const pods = getPods(allNamespaces);
+    const selectedPod = await selectPod(pods, searchTerm, allNamespaces, 'Select pod to exec into:');
+    if (!selectedPod) return;
+
+    podName = selectedPod.name;
+    ns = selectedPod.namespace || getCurrentNamespace();
+  }
+
+  console.log(`Executing into ${podName}...`);
+
+  const contextFlag = context ? ['--context', context] : [];
+  const child = spawn('kubectl', ['exec', '-it', '-n', ns, ...contextFlag, podName, '--', '/bin/sh'], {
     stdio: 'inherit'
   });
 

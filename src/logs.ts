@@ -4,13 +4,15 @@ import { select } from './cli';
 import { getCurrentNamespace } from './namespace';
 import { getPods } from './exec';
 import { getServices } from './port-forward';
-import { selectService, selectPod } from './misc';
+import { selectService, selectPod, selectContext, selectNamespace, selectResource } from './misc';
 import type { ResourceType } from './types';
 
-function getServicePods(serviceName: string, namespace: string): string[] {
+function getServicePodsWithContext(serviceName: string, namespace: string, context?: string): string[] {
   // Get service as full JSON to avoid quote issues with jsonpath
+  const contextFlag = context ? ['--context', context] : [];
   const selectorResult = spawnSync('kubectl', [
     'get', 'service', serviceName, '-n', namespace,
+    ...contextFlag,
     '-o', 'json'
   ], { encoding: 'utf8' });
 
@@ -25,6 +27,7 @@ function getServicePods(serviceName: string, namespace: string): string[] {
 
     const podsResult = spawnSync('kubectl', [
       'get', 'pods', '-n', namespace, '-l', labelSelector,
+      ...contextFlag,
       '-o', 'jsonpath={.items[*].metadata.name}'
     ], { encoding: 'utf8' });
 
@@ -36,18 +39,48 @@ function getServicePods(serviceName: string, namespace: string): string[] {
   }
 }
 
-export async function streamLogs(resourceType: ResourceType, searchTerm: string | undefined, allNamespaces: boolean = false, follow: boolean = true): Promise<void> {
+export async function streamLogs(resourceType: ResourceType, searchTerm: string | undefined, allNamespaces: boolean = false, follow: boolean = true, pick: boolean = false): Promise<void> {
   let podName: string;
   let namespace: string;
+  let context: string | undefined;
 
-  if (resourceType === 'service') {
+  if (pick) {
+    // laku-style flow: context -> namespace -> resource
+    context = await selectContext();
+    if (!context) return;
+
+    namespace = await selectNamespace(context);
+    if (!namespace) return;
+
+    if (resourceType === 'service') {
+      // Pick service, then its pod
+      const serviceName = await selectResource('service', context, namespace);
+      if (!serviceName) return;
+
+      const servicePods = getServicePodsWithContext(serviceName, namespace, context);
+      if (servicePods.length === 0) {
+        console.log('No pods found for this service');
+        return;
+      }
+      if (servicePods.length === 1) {
+        podName = servicePods[0];
+      } else {
+        const selected = await select({question: 'Select pod:', options: servicePods, autocomplete: true});
+        if (!selected) return;
+        podName = selected;
+      }
+    } else {
+      podName = await selectResource('pod', context, namespace);
+      if (!podName) return;
+    }
+  } else if (resourceType === 'service') {
     // Service logs - select service, then its pod
     const services = getServices(allNamespaces);
     const selectedService = await selectService(services, searchTerm, allNamespaces);
     if (!selectedService) return;
 
     namespace = selectedService.namespace || getCurrentNamespace();
-    const servicePods = getServicePods(selectedService.name, namespace);
+    const servicePods = getServicePodsWithContext(selectedService.name, namespace);
 
     if (servicePods.length === 0) {
       console.log('No pods found for this service');
@@ -70,7 +103,8 @@ export async function streamLogs(resourceType: ResourceType, searchTerm: string 
     namespace = selectedPod.namespace || getCurrentNamespace();
   }
 
-  const args = ['logs', podName, '-n', namespace];
+  const contextFlag = context ? ['--context', context] : [];
+  const args = ['logs', podName, '-n', namespace, ...contextFlag];
   if (follow) args.push('-f');
 
   console.log(`Streaming logs from ${podName}...`);

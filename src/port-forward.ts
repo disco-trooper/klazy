@@ -5,7 +5,7 @@ import { configuration, lastCommandKey } from './config';
 import { getCurrentNamespace } from './namespace';
 import { colorize } from './colors';
 import { getPods } from './exec';
-import { selectPort, validatePort, selectService, selectPod } from './misc';
+import { selectPort, validatePort, selectService, selectPod, selectContext, selectNamespace, selectResource } from './misc';
 import type { Service, ResourceType } from './types';
 
 export function getServices(allNamespaces: boolean = false): Service[] {
@@ -21,13 +21,25 @@ export function getServices(allNamespaces: boolean = false): Service[] {
   });
 }
 
-export async function portForward(resourceType: ResourceType, allNamespaces: boolean = false): Promise<void> {
+export async function portForward(resourceType: ResourceType, allNamespaces: boolean = false, pick: boolean = false): Promise<void> {
   let resourceName: string;
   let localPort: string;
   let remotePort: string;
   let namespace: string;
+  let context: string | undefined;
 
-  if (resourceType === 'service') {
+  if (pick) {
+    // laku-style flow: context -> namespace -> resource
+    context = await selectContext();
+    if (!context) return;
+
+    namespace = await selectNamespace(context);
+    if (!namespace) return;
+
+    const resource = resourceType === 'service' ? 'service' : 'pod';
+    resourceName = await selectResource(resource, context, namespace);
+    if (!resourceName) return;
+  } else if (resourceType === 'service') {
     const services = getServices(allNamespaces);
     const selectedService = await selectService(services, undefined, allNamespaces);
     if (!selectedService) return;
@@ -45,12 +57,13 @@ export async function portForward(resourceType: ResourceType, allNamespaces: boo
   remotePort = await input({question: 'Remote port', defaultValue: localPort, validationCallback: validatePort});
 
   const resource = resourceType === 'service' ? 'svc' : 'pod';
-  const cmd = `kubectl port-forward ${resource}/${resourceName} ${localPort}:${remotePort} -n ${namespace}`;
+  const contextFlag = context ? ['--context', context] : [];
+  const cmd = `kubectl port-forward ${resource}/${resourceName} ${localPort}:${remotePort} -n ${namespace}${context ? ` --context ${context}` : ''}`;
   configuration.put({[lastCommandKey]: cmd});
 
-  console.log(`Port forwarding ${colorize(resourceName, 'cyan')} ${colorize(localPort, 'green')}:${colorize(remotePort, 'green')}`);
+  console.log(`Port forwarding ${colorize(resourceName, 'cyan')} ${colorize(localPort, 'green')}:${colorize(remotePort, 'green')}${context ? ` (${colorize(context, 'yellow')})` : ''}`);
 
-  const proc: ChildProcess = spawn('kubectl', ['port-forward', `${resource}/${resourceName}`, `${localPort}:${remotePort}`, '-n', namespace], {
+  const proc: ChildProcess = spawn('kubectl', ['port-forward', `${resource}/${resourceName}`, `${localPort}:${remotePort}`, '-n', namespace, ...contextFlag], {
     stdio: 'inherit'
   });
 

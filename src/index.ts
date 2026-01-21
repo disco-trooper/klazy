@@ -25,6 +25,7 @@ const main = async (): Promise<void> => {
         allNamespaces: args.includes('-a') || args.includes('--all-namespaces'),
         force: args.includes('-f') || args.includes('--force'),
         noFollow: args.includes('--no-follow'),
+        pick: args.includes('-p') || args.includes('--pick'),
     };
     const cmd: string | undefined = args.find((a: string) => !a.startsWith('-'));
 
@@ -45,22 +46,22 @@ const main = async (): Promise<void> => {
             showAllContexts();
             break;
         case 'pf':
-            await portForward('pod', flags.allNamespaces);
+            await portForward('pod', flags.allNamespaces, flags.pick);
             break;
         case 'get':
             const resourceType: string = args.find((a: string, i: number) => i > args.indexOf('get') && !a.startsWith('-')) || 'pods';
-            await getResources(resourceType, flags.allNamespaces);
+            await getResources(resourceType, flags.allNamespaces, flags.pick);
             break;
         case 'pfs':
-            await portForward('service', flags.allNamespaces);
+            await portForward('service', flags.allNamespaces, flags.pick);
             break;
         case 'logs':
             const logsSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('logs') && !a.startsWith('-'));
-            await streamLogs('pod', logsSearch, flags.allNamespaces, !flags.noFollow);
+            await streamLogs('pod', logsSearch, flags.allNamespaces, !flags.noFollow, flags.pick);
             break;
         case 'logss':
             const logssSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('logss') && !a.startsWith('-'));
-            await streamLogs('service', logssSearch, flags.allNamespaces, !flags.noFollow);
+            await streamLogs('service', logssSearch, flags.allNamespaces, !flags.noFollow, flags.pick);
             break;
         case 'ns':
             const nsArg: string | undefined = args.find((a: string, i: number) => i > args.indexOf('ns') && (!a.startsWith('-') || a === '-'));
@@ -68,15 +69,15 @@ const main = async (): Promise<void> => {
             break;
         case 'exec':
             const execSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('exec') && !a.startsWith('-'));
-            await execIntoPod(execSearch, flags.allNamespaces);
+            await execIntoPod(execSearch, flags.allNamespaces, flags.pick);
             break;
         case 'desc':
             const descSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('desc') && !a.startsWith('-'));
-            await describePod(descSearch, flags.allNamespaces);
+            await describePod(descSearch, flags.allNamespaces, flags.pick);
             break;
         case 'env':
             const envSearch: string | undefined = args.find((a: string, i: number) => i > args.indexOf('env') && !a.startsWith('-'));
-            await showEnv(envSearch, flags.allNamespaces);
+            await showEnv(envSearch, flags.allNamespaces, flags.pick);
             break;
         case 'events':
         case 'ev':

@@ -70,4 +70,5 @@ export interface Flags {
   allNamespaces: boolean;
   force: boolean;
   noFollow: boolean;
+  pick: boolean;
 }
