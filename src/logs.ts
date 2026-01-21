@@ -39,7 +39,7 @@ function getServicePodsWithContext(serviceName: string, namespace: string, conte
   }
 }
 
-export async function streamLogs(resourceType: ResourceType, searchTerm: string | undefined, allNamespaces: boolean = false, follow: boolean = true, pick: boolean = false): Promise<void> {
+export async function streamLogs(resourceType: ResourceType, searchTerm: string | undefined, allNamespaces: boolean = false, follow: boolean = true, pick: boolean = false, pipeCmd?: string): Promise<void> {
   let podName: string;
   let namespace: string;
   let context: string | undefined;
@@ -108,11 +108,29 @@ export async function streamLogs(resourceType: ResourceType, searchTerm: string 
   if (follow) args.push('-f');
 
   console.log(`Streaming logs from ${podName}...`);
-  const proc: ChildProcess = spawn('kubectl', args, { stdio: 'inherit' });
 
-  proc.on('close', (code: number | null) => {
-    if (code !== 0 && code !== null) {
-      console.log(`\nLogs ended (code ${code})`);
-    }
-  });
+  if (pipeCmd) {
+    const kubectlProc = spawn('kubectl', args, { stdio: ['inherit', 'pipe', 'inherit'] });
+    const pipeProc = spawn(pipeCmd, [], { stdio: ['pipe', 'inherit', 'inherit'], shell: true });
+
+    kubectlProc.stdout?.pipe(pipeProc.stdin!);
+
+    kubectlProc.on('close', () => {
+      pipeProc.stdin?.end();
+    });
+
+    pipeProc.on('close', (code: number | null) => {
+      if (code !== 0 && code !== null) {
+        console.log(`\nPipe ended (code ${code})`);
+      }
+    });
+  } else {
+    const proc: ChildProcess = spawn('kubectl', args, { stdio: 'inherit' });
+
+    proc.on('close', (code: number | null) => {
+      if (code !== 0 && code !== null) {
+        console.log(`\nLogs ended (code ${code})`);
+      }
+    });
+  }
 }
