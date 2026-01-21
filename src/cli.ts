@@ -28,16 +28,6 @@ const newline = (): boolean => write('\n');
 const hideCursor = (): boolean => write('\x1B[?25l');
 const showCursor = (): boolean => write('\x1B[?25h');
 const makeBold = (str: string): string => `\x1b[1m${str}\x1b[22m`;
-
-// Safe TTY wrappers - these methods may not exist when stdout is not a TTY
-const clearLine = (dir: -1 | 0 | 1 = 0): boolean =>
-    process.stdout.clearLine ? process.stdout.clearLine(dir) : true;
-const cursorTo = (x: number, y?: number): boolean =>
-    process.stdout.cursorTo ? process.stdout.cursorTo(x, y) : true;
-const moveCursor = (dx: number, dy: number): boolean =>
-    process.stdout.moveCursor ? process.stdout.moveCursor(dx, dy) : true;
-const clearScreenDown = (): boolean =>
-    process.stdout.clearScreenDown ? process.stdout.clearScreenDown() : true;
 const CHOICES_ON_SCREEN: number = 5;
 const AUTOCOMPLETE_LABEL: string = '>>> autocomplete: ';
 
@@ -85,11 +75,11 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
     const isRangeAlwaysVisible = (): boolean => options.length <= CHOICES_ON_SCREEN;
 
     const doAutoComplete = (): void => {
-        clearLine(0);
-        cursorTo(0);
+        process.stdout.clearLine(0);
+        process.stdout.cursorTo(0);
         write(AUTOCOMPLETE_LABEL);
         write(autocompleteString);
-        cursorTo(AUTOCOMPLETE_LABEL.length + autoCompleteStringPointer);
+        process.stdout.cursorTo(AUTOCOMPLETE_LABEL.length + autoCompleteStringPointer);
 
         const autocompleteCompliantIndices: number[] = getAutocompleteCompliantIndices();
         visibleOptionsIndices = autocompleteCompliantIndices.slice(0, CHOICES_ON_SCREEN);
@@ -117,13 +107,13 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
             case ARROW_LEFT:
                 if (autoCompleteStringPointer !== 0) {
                     autoCompleteStringPointer--;
-                    moveCursor(-1, 0);
+                    process.stdout.moveCursor(-1, 0);
                 }
                 break;
             case ARROW_RIGHT:
                 if (autoCompleteStringPointer !== autocompleteString.length) {
                     autoCompleteStringPointer++;
-                    moveCursor(1, 0);
+                    process.stdout.moveCursor(1, 0);
                 }
                 break;
             case DELETE:
@@ -276,14 +266,14 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
         if (!process.stdin.isPaused()) {
             process.stdin.pause();
         }
-        moveCursor(0, autocomplete ? visibleOptionsIndices.length : visibleOptionsIndices.length - 1);
+        process.stdout.moveCursor(0, autocomplete ? visibleOptionsIndices.length : visibleOptionsIndices.length - 1);
         showCursor();
         newline();
         emitter.emit('selection', options[currentPointer]);
     };
 
     const ctrlc = (): void => {
-        moveCursor(0, visibleOptionsIndices.length);
+        process.stdout.moveCursor(0, visibleOptionsIndices.length);
         newline();
         write('EXIT..');
         newline();
@@ -303,8 +293,8 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
         }
 
         opts.forEach((opt, i) => {
-            clearLine(0);
-            cursorTo(0);
+            process.stdout.clearLine(0);
+            process.stdout.cursorTo(0);
             if (visibleOptionsIndices[i] === currentPointer) {
                 write(highlight(opts[i]));
             } else {
@@ -314,12 +304,12 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
                 newline();
         });
 
-        clearScreenDown();
+        process.stdout.clearScreenDown();
         const shiftUp: number = opts.length < CHOICES_ON_SCREEN ? opts.length : CHOICES_ON_SCREEN;
-        moveCursor(0, -shiftUp + 1);
+        process.stdout.moveCursor(0, -shiftUp + 1);
         if (autocomplete) {
-            moveCursor(0, -1);
-            cursorTo(AUTOCOMPLETE_LABEL.length + autoCompleteStringPointer);
+            process.stdout.moveCursor(0, -1);
+            process.stdout.cursorTo(AUTOCOMPLETE_LABEL.length + autoCompleteStringPointer);
         }
     };
 
