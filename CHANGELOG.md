@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-01-21
+
+### Added
+- **Pipe support** (`--pipe`) for log processing
+  - `logs --pipe tspin` — colorize logs with tailspin
+  - `logs --pipe "jq ."` — parse JSON logs
+  - Works with `logs` and `logss` commands
+
 ## [1.1.0] - 2026-01-21
 
 ### Added

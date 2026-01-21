@@ -5,7 +5,7 @@ import { getCurrentNamespace } from './namespace';
 import { getPods } from './exec';
 import { getServices } from './port-forward';
 import { selectService, selectPod, selectContext, selectNamespace, selectResource } from './misc';
-import type { ResourceType } from './types';
+import type { ResourceType, StreamLogsOptions } from './types';
 
 function getServicePodsWithContext(serviceName: string, namespace: string, context?: string): string[] {
   // Get service as full JSON to avoid quote issues with jsonpath
@@ -39,7 +39,12 @@ function getServicePodsWithContext(serviceName: string, namespace: string, conte
   }
 }
 
-export async function streamLogs(resourceType: ResourceType, searchTerm: string | undefined, allNamespaces: boolean = false, follow: boolean = true, pick: boolean = false): Promise<void> {
+export async function streamLogs(
+  resourceType: ResourceType,
+  searchTerm: string | undefined,
+  options: StreamLogsOptions = {}
+): Promise<void> {
+  const { allNamespaces = false, follow = true, pick = false, pipeCmd } = options;
   let podName: string;
   let namespace: string;
   let context: string | undefined;
@@ -108,11 +113,31 @@ export async function streamLogs(resourceType: ResourceType, searchTerm: string 
   if (follow) args.push('-f');
 
   console.log(`Streaming logs from ${podName}...`);
-  const proc: ChildProcess = spawn('kubectl', args, { stdio: 'inherit' });
 
-  proc.on('close', (code: number | null) => {
-    if (code !== 0 && code !== null) {
-      console.log(`\nLogs ended (code ${code})`);
-    }
-  });
+  if (pipeCmd) {
+    const kubectlProc = spawn('kubectl', args, { stdio: ['inherit', 'pipe', 'inherit'] });
+    kubectlProc.on('error', (err) => {
+      console.error(`kubectl error: ${err.message}`);
+    });
+    const pipeProc = spawn(pipeCmd, [], { stdio: ['pipe', 'inherit', 'inherit'], shell: true });
+    pipeProc.on('error', (err) => {
+      console.error(`Pipe command '${pipeCmd}' failed: ${err.message}`);
+    });
+
+    kubectlProc.stdout?.pipe(pipeProc.stdin!);
+
+    pipeProc.on('close', (code: number | null) => {
+      if (code !== 0 && code !== null) {
+        console.log(`\nPipe ended (code ${code})`);
+      }
+    });
+  } else {
+    const proc: ChildProcess = spawn('kubectl', args, { stdio: 'inherit' });
+
+    proc.on('close', (code: number | null) => {
+      if (code !== 0 && code !== null) {
+        console.log(`\nLogs ended (code ${code})`);
+      }
+    });
+  }
 }

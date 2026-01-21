@@ -37,6 +37,7 @@ Use as `kl` or `klazy`.
 | `klazy desc -p`     | Describe with picker     |
 | `klazy logs`        | Stream logs              |
 | `klazy logs -p`     | Logs with context picker |
+| `klazy logs --pipe` | Pipe logs through tool   |
 | `klazy logss`       | Stream service logs      |
 | `klazy logss -p`    | Service logs with picker |
 | `klazy env`         | Pod environment          |
@@ -61,6 +62,7 @@ Use as `kl` or `klazy`.
 - **Quick switch** — `-` returns to previous context or namespace
 - **All namespaces** — `-a` searches everywhere
 - **Context picker** — `-p` selects context → namespace → resource
+- **Pipe support** — `--pipe tspin` pipes logs through external tools
 - **Zsh completion** — `eval "$(klazy completion zsh)"`
 
 ## Examples
@@ -75,6 +77,10 @@ klazy env worker
 klazy exec -p      # context → namespace → pod → shell
 klazy logs -p      # context → namespace → pod → logs
 klazy pf -p        # context → namespace → pod → ports
+
+# Pipe logs through external tools
+klazy logs nginx --pipe tspin   # colorized logs with tailspin
+klazy logs api --pipe "jq ."    # parse JSON logs
 
 # Switch context and namespace
 klazy c prod && klazy ns default
