@@ -91,6 +91,16 @@ klazy ns -         # previous namespace
 klazy copy nginx:/var/log/app.log ./
 ```
 
+## Development
+
+Requires [Bun](https://bun.sh).
+
+```bash
+bun install
+bun run dev -- logs    # run directly from TypeScript
+bun run build          # bundle for production
+```
+
 ## Credits
 
 Fork of [laku](https://github.com/prunevac/laku).

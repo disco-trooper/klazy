@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-01-29
+
+### Added
+- **Auto port detection** for `pf` and `pfs`
+  - Detects containerPort from pods, port from services
+  - Offers selection when multiple ports exist
+  - Defaults to 8080 when no ports found
+
+### Changed
+- **Bun for development**
+  - `bun run dev` — run TypeScript directly
+  - `bun run build` — bundle for production
+  - Output stays Node-compatible
+
 ## [1.2.0] - 2026-01-21
 
 ### Added
