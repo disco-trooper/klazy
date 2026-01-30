@@ -285,7 +285,8 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
         if (invalidSelection) {
             opts = ['> no option matches the filter'];
         } else {
-            opts = options.filter((_, i) => visibleOptionsIndices.includes(i)).map(o => `> ${colorizeOption(o)}`);
+            // Map in order of visibleOptionsIndices to preserve fuzzy sort order
+            opts = visibleOptionsIndices.map(i => `> ${colorizeOption(options[i])}`);
         }
 
         if (autocomplete) {
@@ -296,9 +297,9 @@ export const select = ({ question, options, pointer, autocomplete }: SelectConfi
             process.stdout.clearLine(0);
             process.stdout.cursorTo(0);
             if (visibleOptionsIndices[i] === currentPointer) {
-                write(highlight(opts[i]));
+                write(highlight(opt));
             } else {
-                write(opts[i]);
+                write(opt);
             }
             if (i !== opts.length - 1)
                 newline();

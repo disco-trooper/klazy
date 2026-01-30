@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 2026-01-30
+
+### Fixed
+- Fuzzy autocomplete now selects the correct item. Previously, typing a filter would display results sorted by match score, but selecting an item returned the wrong option due to index mismatch.
+
 ## [1.3.0] - 2026-01-29
 
 ### Added
